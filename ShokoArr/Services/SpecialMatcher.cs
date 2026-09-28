@@ -6,7 +6,7 @@ namespace ShokoArr.Services;
 /// <summary>Matches an AniDB special to a Sonarr season-0 episode. AniDB and TheTVDB number specials independently, so the number alone often points at a different episode.</summary>
 public static partial class SpecialMatcher
 {
-    private const int MaxAirDateDriftDays = 3;
+    internal const int MaxAirDateDriftDays = 3;
 
     public static SonarrEpisodeResource? Match(List<SonarrEpisodeResource> sonarrEpisodes, MissingEpisodeInfo special)
     {
@@ -37,10 +37,10 @@ public static partial class SpecialMatcher
         return byNumber is not null && (special.AirDate is null || AirDateOf(byNumber) is null) ? byNumber : null;
     }
 
-    private static DateOnly? AirDateOf(SonarrEpisodeResource se) =>
+    internal static DateOnly? AirDateOf(SonarrEpisodeResource se) =>
         DateOnly.TryParse(se.AirDate, out var d) ? d : null;
 
-    private static double Similarity(string? a, string? b)
+    internal static double Similarity(string? a, string? b)
     {
         var ta = Tokens(a);
         var tb = Tokens(b);
