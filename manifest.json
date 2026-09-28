@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/ShokoArr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.0.0",
+      "tag": "v1.0.0",
+      "source_revision": "9b40b01060ff54ee8ac09073a2c93e9ac006d65d",
+      "released_at": "2026-09-28T17:43:47Z",
+      "channel": "Stable",
+      "release_notes": "## Upgrading to 1.0\n\n- **Shoko admin login required.** The ShokoArr API now requires a signed-in Shoko admin. The dashboard inside the WebUI uses your session automatically; scripts calling the API must send an admin `apikey`.\n- **New URLs.** API routes moved from `/api/v1/ShokoSonarr/*` to `/api/v1/ShokoArr/*`, and the dashboard from `/api/plugin/ShokoSonarr/dashboard` to `/api/plugin/ShokoArr/dashboard`. The WebUI's plugin page link updates by itself.\n- **Data folder moves automatically.** On first start, `plugins/shoko_sonarr/` becomes `plugins/shoko_arr/`; settings, overrides and pending searches carry over.\n- **Changing a Sonarr/Radarr URL now needs the API key re-entered**, so a stored key is never sent to a different host.\n- **Multi-cour shows match by air date**, so a later cour no longer maps to the first cour's episodes.\n- **Targets Shoko 6.0 pre-releases.** Shoko's plugin API is not stable yet; a Shoko update may need a matching Shoko Arr release.\n\n\n\n## What's Changed\n* Require Shoko admin auth and stop leaking stored *arr API keys by @Foowy in https://github.com/Foowy/ShokoArr/pull/73\n* Rename API routes and data folder from ShokoSonarr to ShokoArr by @Foowy in https://github.com/Foowy/ShokoArr/pull/75\n* Match episodes by air date so later cours map correctly by @Foowy in https://github.com/Foowy/ShokoArr/pull/74\n* Say plainly that Shoko Arr targets Shoko 6.0 pre-releases by @Foowy in https://github.com/Foowy/ShokoArr/pull/76\n* chore: bump version to 1.0.0 by @Foowy in https://github.com/Foowy/ShokoArr/pull/77\n\n\n**Full Changelog**: https://github.com/Foowy/ShokoArr/compare/v0.9.3...v1.0.0",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v1.0.0/ShokoArr-v1.0.0_linux-arm64.zip",
+          "checksum": "1f96b8f02cb08337c53dd658b6bf1986b6e8154aad4ef4aa27312e87dfd8ce9a"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v1.0.0/ShokoArr-v1.0.0_linux-x64.zip",
+          "checksum": "c49df6d7d8fb473bb9aea74fa853aa494516d99836162411ac33462a42f6ffe1"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v1.0.0/ShokoArr-v1.0.0_win-x64.zip",
+          "checksum": "c63cbc1eefb2b1dbb4deafcef9c365f720dafa98e082074b275b71d516ea0cba"
+        }
+      ]
+    },
+    {
       "version": "0.9.3",
       "tag": "v0.9.3",
       "source_revision": "09949feb86cad62b0b576e274990bd8f14ada3e4",
