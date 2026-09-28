@@ -31,7 +31,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.TestConnectionAsync(TestSettings);
+        var result = await client.TestConnectionAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal("testkey", handler.LastRequest!.Headers.GetValues("X-Api-Key").Single());
@@ -43,7 +43,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => throw new HttpRequestException("connection refused"));
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.TestConnectionAsync(TestSettings);
+        var result = await client.TestConnectionAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.False(result.Success);
         Assert.Contains("connection refused", result.ErrorMessage);
@@ -80,7 +80,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.LookupByTvdbIdAsync(TestSettings, 81797);
+        var result = await client.LookupByTvdbIdAsync(TestSettings, 81797, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
@@ -97,7 +97,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81797, title: "One Piece", qualityProfileId: 4, rootFolderPath: "/anime");
+        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81797, title: "One Piece", qualityProfileId: 4, rootFolderPath: "/anime", ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(55, result.Data!.Id);
@@ -118,7 +118,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81798, title: "Some Sequel", qualityProfileId: 4, rootFolderPath: "/anime", monitorMode: "all", searchOnAdd: true);
+        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81798, title: "Some Sequel", qualityProfileId: 4, rootFolderPath: "/anime", monitorMode: "all", searchOnAdd: true, ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(56, result.Data!.Id);
@@ -136,7 +136,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81799, title: "Tagged Show", qualityProfileId: 4, rootFolderPath: "/anime", tagIds: [3, 5]);
+        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81799, title: "Tagged Show", qualityProfileId: 4, rootFolderPath: "/anime", tagIds: [3, 5], ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         using var body = JsonDocument.Parse(handler.LastRequestBody!);
@@ -153,7 +153,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.GetTagsAsync(TestSettings);
+        var result = await client.GetTagsAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(2, result.Data!.Count);
@@ -169,7 +169,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.CreateTagAsync(TestSettings, "One Piece");
+        var result = await client.CreateTagAsync(TestSettings, "One Piece", TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(9, result.Data!.Id);
@@ -185,7 +185,7 @@ public class SonarrClientTests
             : throw new InvalidOperationException("should not create a tag that already exists"));
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.EnsureTagIdAsync(TestSettings, "One Piece");
+        var result = await client.EnsureTagIdAsync(TestSettings, "One Piece", TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(4, result.Data);
@@ -199,7 +199,7 @@ public class SonarrClientTests
             : new HttpResponseMessage(HttpStatusCode.Created) { Content = new StringContent("""{"id":11,"label":"New Franchise"}""") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.EnsureTagIdAsync(TestSettings, "New Franchise");
+        var result = await client.EnsureTagIdAsync(TestSettings, "New Franchise", TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(11, result.Data);
@@ -213,7 +213,7 @@ public class SonarrClientTests
             : new HttpResponseMessage(HttpStatusCode.Accepted) { Content = new StringContent("""{"id":42,"title":"Existing Show","tvdbId":81797,"tags":[1,7]}""") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.UpdateSeriesTagAsync(TestSettings, sonarrSeriesId: 42, tagId: 7);
+        var result = await client.UpdateSeriesTagAsync(TestSettings, sonarrSeriesId: 42, tagId: 7, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(HttpMethod.Put, handler.LastRequest!.Method);
@@ -232,7 +232,7 @@ public class SonarrClientTests
             : new HttpResponseMessage(HttpStatusCode.Accepted) { Content = new StringContent("""{"id":42,"title":"Existing Show","tags":[7]}""") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.UpdateSeriesTagAsync(TestSettings, sonarrSeriesId: 42, tagId: 7);
+        var result = await client.UpdateSeriesTagAsync(TestSettings, sonarrSeriesId: 42, tagId: 7, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
     }
@@ -243,7 +243,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.Created) { Content = new StringContent("{}") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81797, title: "One Piece", qualityProfileId: 4, rootFolderPath: "/anime");
+        var result = await client.AddSeriesAsync(TestSettings, tvdbId: 81797, title: "One Piece", qualityProfileId: 4, rootFolderPath: "/anime", ct: TestContext.Current.CancellationToken);
 
         Assert.False(result.Success);
     }
@@ -257,7 +257,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.GetQualityProfilesAsync(TestSettings);
+        var result = await client.GetQualityProfilesAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
@@ -273,7 +273,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.GetRootFoldersAsync(TestSettings);
+        var result = await client.GetRootFoldersAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
@@ -289,7 +289,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.GetExistingSeriesByTvdbIdAsync(TestSettings, 81797);
+        var result = await client.GetExistingSeriesByTvdbIdAsync(TestSettings, 81797, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
@@ -302,7 +302,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.Accepted) { Content = new StringContent("{}") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.MonitorEpisodesAsync(TestSettings, [100, 101]);
+        var result = await client.MonitorEpisodesAsync(TestSettings, [100, 101], TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         using var body = JsonDocument.Parse(handler.LastRequestBody!);
@@ -316,7 +316,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.Accepted) { Content = new StringContent("{}") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.UnmonitorEpisodesAsync(TestSettings, [100, 101]);
+        var result = await client.UnmonitorEpisodesAsync(TestSettings, [100, 101], TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         using var body = JsonDocument.Parse(handler.LastRequestBody!);
@@ -330,7 +330,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.Created) { Content = new StringContent("{}") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.TriggerEpisodeSearchAsync(TestSettings, [100, 101]);
+        var result = await client.TriggerEpisodeSearchAsync(TestSettings, [100, 101], TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         using var body = JsonDocument.Parse(handler.LastRequestBody!);
@@ -343,7 +343,7 @@ public class SonarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized) { Content = new StringContent("Unauthorized") });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.TestConnectionAsync(TestSettings);
+        var result = await client.TestConnectionAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.False(result.Success);
         Assert.Contains("401", result.ErrorMessage);
@@ -362,7 +362,7 @@ public class SonarrClientTests
         });
         var client = new SonarrClient(new HttpClient(handler));
 
-        var result = await client.GetQueuedEpisodeIdsAsync(TestSettings);
+        var result = await client.GetQueuedEpisodeIdsAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(1001, result.Data!.Count);

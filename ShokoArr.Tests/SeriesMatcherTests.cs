@@ -31,7 +31,7 @@ public class SeriesMatcherTests
         var matcher = MakeMatcher(client);
         var series = new SeriesMissingResult { ShokoSeriesId = 1, Title = "One Piece", TvdbId = 81797 };
 
-        var resolution = await matcher.ResolveAsync(TestSettings, series);
+        var resolution = await matcher.ResolveAsync(TestSettings, series, TestContext.Current.CancellationToken);
 
         Assert.True(resolution.AutoResolved);
         Assert.Equal(81797, resolution.TvdbId);
@@ -47,7 +47,7 @@ public class SeriesMatcherTests
         var matcher = MakeMatcher(client);
         var series = new SeriesMissingResult { ShokoSeriesId = 2, Title = "Frieren", TvdbId = null };
 
-        var resolution = await matcher.ResolveAsync(TestSettings, series);
+        var resolution = await matcher.ResolveAsync(TestSettings, series, TestContext.Current.CancellationToken);
 
         Assert.False(resolution.AutoResolved);
         Assert.Equal(2, resolution.Candidates.Count);
@@ -61,7 +61,7 @@ public class SeriesMatcherTests
         var matcher = MakeMatcher(client);
         var series = new SeriesMissingResult { ShokoSeriesId = 3, Title = "Some Obscure Anime", TvdbId = null };
 
-        var resolution = await matcher.ResolveAsync(TestSettings, series);
+        var resolution = await matcher.ResolveAsync(TestSettings, series, TestContext.Current.CancellationToken);
 
         Assert.False(resolution.AutoResolved);
         Assert.Empty(resolution.Candidates);

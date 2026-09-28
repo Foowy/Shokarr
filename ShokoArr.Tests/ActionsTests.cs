@@ -44,7 +44,7 @@ public class ActionsTests : IDisposable
         var action = new TriggerScanAction(scanner);
 
         Assert.Null(_cacheStore.GetLastScan());
-        await action.Execute();
+        await action.Execute(TestContext.Current.CancellationToken);
 
         Assert.NotNull(_cacheStore.GetLastScan());
     }
@@ -71,7 +71,7 @@ public class ActionsTests : IDisposable
         var action = new SearchMissingEpisodesAction(matcher, searchService, actionClient, _cacheStore, _settings);
         SetSeriesContext(action, MakeSeries(1).Object);
 
-        var result = await action.Validate();
+        var result = await action.Validate(TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Contains("run a scan first", result!.Reason);
@@ -100,7 +100,7 @@ public class ActionsTests : IDisposable
         var action = new SearchMissingEpisodesAction(matcher, searchService, sonarrClient, _cacheStore, _settings);
         SetSeriesContext(action, MakeSeries(1).Object);
 
-        var result = await action.Validate();
+        var result = await action.Validate(TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
@@ -118,7 +118,7 @@ public class ActionsTests : IDisposable
         var action = new SearchMissingEpisodesAction(matcher, searchService, sonarrClient, _cacheStore, _settings);
         SetSeriesContext(action, MakeSeries(1).Object);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => action.Execute());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => action.Execute(TestContext.Current.CancellationToken));
     }
 
     private static SeriesMissingResult HeldSeries(string secondState) => new()
@@ -166,7 +166,7 @@ public class ActionsTests : IDisposable
     public async Task SearchMissingEpisodesAction_Execute_SkipsHeldEpisodes()
     {
         var (action, bodies) = MakeHeldAction(HeldSeries("none"));
-        await action.Execute();
+        await action.Execute(TestContext.Current.CancellationToken);
 
         var command = Assert.Single(bodies);
         Assert.Contains("[102]", command.Replace(" ", ""));
@@ -178,7 +178,7 @@ public class ActionsTests : IDisposable
     {
         var (action, bodies) = MakeHeldAction(HeldSeries("downloading"));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => action.Execute());
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => action.Execute(TestContext.Current.CancellationToken));
 
         Assert.Equal("Every missing episode of this series is already in Sonarr.", ex.Message);
         Assert.Empty(bodies);
