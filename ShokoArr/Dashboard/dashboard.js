@@ -1,4 +1,4 @@
-const API_BASE = window.location.pathname.replace(/\/dashboard.*$/, '').replace('/api/plugin/ShokoSonarr', '/api/v1.0/ShokoSonarr');
+const API_BASE = window.location.pathname.replace(/\/dashboard.*$/, '').replace('/api/plugin/ShokoArr', '/api/v1.0/ShokoArr');
 
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => (
@@ -6,7 +6,7 @@ function escapeHtml(s) {
   ));
 }
 
-const THEME_STORAGE_KEY = 'shoko-sonarr-theme';
+const THEME_STORAGE_KEY = 'shoko-arr-theme';
 const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
 function resolveTheme(pref) {
@@ -32,11 +32,25 @@ document.getElementById('theme-select').onchange = (e) => {
   applyTheme(e.target.value);
 };
 
+// The dashboard runs in a same-origin iframe inside Shoko's WebUI, which keeps the signed-in user's key in
+// sessionStorage, and also in localStorage when "remember me" is ticked.
+function shokoApiKey() {
+  try {
+    return JSON.parse(sessionStorage.getItem('state') ?? '{}').apiSession?.apikey
+      || JSON.parse(localStorage.getItem('apiSession') ?? '{}').apikey
+      || '';
+  } catch {
+    return '';
+  }
+}
+
 async function fetchJson(path, options) {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', apikey: shokoApiKey() },
     ...options,
   });
+  if (res.status === 401 || res.status === 403)
+    return { Success: false, Message: 'Sign in to Shoko as an admin to use Shoko Arr.', Data: null };
   return res.status === 204 ? null : res.json();
 }
 
@@ -330,7 +344,7 @@ async function loadScanResults() {
   renderSeries(result);
 }
 
-const LIVE_REFRESH_STORAGE_KEY = 'shoko-sonarr-live-refresh';
+const LIVE_REFRESH_STORAGE_KEY = 'shoko-arr-live-refresh';
 const LIVE_REFRESH_INTERVAL_MS = 20_000;
 let liveRefreshTimer = null;
 
@@ -754,6 +768,13 @@ document.getElementById('save-settings').onclick = async () => {
   await loadSettings();
 };
 
+// Builds before 1.0 saved these under the ShokoSonarr names.
+for (const [oldKey, newKey] of [['shoko-sonarr-theme', THEME_STORAGE_KEY], ['shoko-sonarr-live-refresh', LIVE_REFRESH_STORAGE_KEY]]) {
+  const value = localStorage.getItem(oldKey);
+  if (value !== null && localStorage.getItem(newKey) === null)
+    localStorage.setItem(newKey, value);
+  localStorage.removeItem(oldKey);
+}
 initTheme();
 document.getElementById('live-refresh').checked = localStorage.getItem(LIVE_REFRESH_STORAGE_KEY) === '1';
 setLiveRefresh(document.getElementById('live-refresh').checked);

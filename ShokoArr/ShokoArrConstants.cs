@@ -17,11 +17,12 @@ public static class ShokoArrConstants
     public const string PluginId = "8f2c1a4e-6b9d-4e3a-9c7f-2d5b8a1e6f3c";
 
     /// <summary>Base HTTP path for plugin endpoints (dashboard + API).</summary>
-    public const string BasePath = "/api/plugin/ShokoSonarr";
+    public const string BasePath = "/api/plugin/ShokoArr";
 
-    /// <summary>Subfolder name under the host's data directory for this plugin's LiteDB file and settings.</summary>
-    public const string PluginDataSubfolder = "shoko_sonarr";
+    /// <summary>Subfolder name under the host's data directory for this plugin's LiteDB file and settings. Not
+    /// "ShokoArr": that is the plugin's own install folder for manual deploys, which an uninstall deletes.</summary>
+    public const string PluginDataSubfolder = "shoko_arr";
 
     /// <summary>Filename of the plugin's LiteDB database.</summary>
-    public const string LiteDbFileName = "shoko_sonarr.db";
+    public const string LiteDbFileName = "shoko_arr.db";
 }
