@@ -70,24 +70,27 @@ Existing settings are migrated automatically on first start. Settings are stored
 
 ## Installing
 
-### Via Shoko's plugin manager (recommended)
+### GUI (Recommended)
 
-This repo publishes a live [`manifest.json`](manifest.json) that ShokoServer's plugin manager can consume directly as a repository. It's kept up to date automatically: every tagged GitHub release adds its own entry (version, changelog, per-runtime archive + checksum) via CI.
+1. Open the Shoko Web UI and navigate to **Settings → Plugins → Repositories**.
+2. Add the manifest URL:
+   ```
+   https://raw.githubusercontent.com/Foowy/ShokoArr/master/manifest.json
+   ```
+3. Go to **Settings → Plugins → Browse** and find **Shoko Arr**.
+4. Click **Install** on the desired version.
+5. Restart Shoko.
 
-1. In Shoko's WebUI, go to **Settings → Plugins** and add a new repository with:
-   - **Name:** `Shoko Arr` (or anything you like)
-   - **URL:** `https://raw.githubusercontent.com/Foowy/ShokoArr/master/manifest.json`
-2. Shoko fetches the manifest and lists Shoko Arr as an installable package — pick a release and install it from there.
-3. Once installed, enable **auto-upgrade** on the repository/package if you want future releases pulled in automatically; otherwise re-check the plugin manager after new releases.
+New releases show up under **Settings → Plugins → Updates**. The manifest is updated automatically by CI for every tagged release.
 
-### Manual deploy
+### Manual
 
-```bash
-dotnet publish ShokoArr -c Release -o <output-dir>
-# copy <output-dir>/* into Shoko's plugins/ShokoArr/ directory, then restart Shoko Server
-```
+1. Download the latest `ShokoArr-v<version>_<runtime>.zip` for your platform (`linux-x64`, `linux-arm64` or `win-x64`) from the
+   [Releases](../../releases) page.
+2. Extract the ZIP into a `ShokoArr` folder inside your Shoko **plugins** folder.
+3. Restart Shoko.
 
-Plugin load only happens at ShokoServer startup — copying the DLL alone has no effect. Requires a Shoko Server build with plugin Abstractions 6.0 (currently the `dev`/`daily` channel).
+Plugins only load when Shoko starts, so copying the files in has no effect until the restart.
 
 ## Building & testing
 
