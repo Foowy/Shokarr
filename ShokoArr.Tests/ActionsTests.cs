@@ -13,7 +13,7 @@ namespace ShokoArr.Tests;
 
 public class ActionsTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "shoko-sonarr-tests-" + Guid.NewGuid());
+    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "shoko-arr-tests-" + Guid.NewGuid());
     private readonly ScanCacheStore _cacheStore;
     private readonly FakeSettingsSource _settings = new();
 

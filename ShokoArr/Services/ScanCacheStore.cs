@@ -29,8 +29,28 @@ public class ScanCacheStore : IDisposable
     public ScanCacheStore(string dataPath)
     {
         var pluginDir = Path.Combine(dataPath, "plugins", ShokoArrConstants.PluginDataSubfolder);
+        MigrateLegacyDataFolder(Path.Combine(dataPath, "plugins", "shoko_sonarr"), pluginDir);
         Directory.CreateDirectory(pluginDir);
         _db = new LiteDatabase(Path.Combine(pluginDir, ShokoArrConstants.LiteDbFileName));
+    }
+
+    // Builds before 1.0 kept the database under the ShokoSonarr names. Each step checks its own target so a
+    // move interrupted between the folder and the files finishes on the next start instead of opening an empty database.
+    private static void MigrateLegacyDataFolder(string legacyDir, string pluginDir)
+    {
+        if (!Directory.Exists(pluginDir) && Directory.Exists(legacyDir))
+            Directory.Move(legacyDir, pluginDir);
+
+        var legacyDb = Path.Combine(pluginDir, "shoko_sonarr.db");
+        var db = Path.Combine(pluginDir, ShokoArrConstants.LiteDbFileName);
+        if (File.Exists(db) || !File.Exists(legacyDb))
+            return;
+
+        // LiteDB keeps uncommitted pages in "<name>-log<ext>" beside the database, so the pair moves together.
+        var legacyLog = Path.Combine(pluginDir, "shoko_sonarr-log.db");
+        if (File.Exists(legacyLog))
+            File.Move(legacyLog, Path.Combine(pluginDir, Path.GetFileNameWithoutExtension(db) + "-log.db"));
+        File.Move(legacyDb, db);
     }
 
     /// <inheritdoc/>

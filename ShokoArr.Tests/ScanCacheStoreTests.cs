@@ -13,7 +13,7 @@ public class ScanCacheStoreTests : IDisposable
 
     public ScanCacheStoreTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-sonarr-tests-" + Guid.NewGuid());
+        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-arr-tests-" + Guid.NewGuid());
         Directory.CreateDirectory(_tempDir);
         _store = new ScanCacheStore(_tempDir);
     }
@@ -160,7 +160,7 @@ public class ScanCacheStoreTests : IDisposable
     [Fact]
     public void GetSettings_PreUpgradeDocMissingIncludeSpecials_DefaultsToTrue()
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), "shoko-sonarr-tests-" + Guid.NewGuid());
+        var tempDir = Path.Combine(Path.GetTempPath(), "shoko-arr-tests-" + Guid.NewGuid());
         var pluginDir = Path.Combine(tempDir, "plugins", ShokoArrConstants.PluginDataSubfolder);
         Directory.CreateDirectory(pluginDir);
         var dbPath = Path.Combine(pluginDir, ShokoArrConstants.LiteDbFileName);

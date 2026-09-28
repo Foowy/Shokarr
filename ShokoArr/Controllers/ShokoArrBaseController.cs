@@ -8,7 +8,7 @@ namespace ShokoArr.Controllers;
 [ApiController]
 [Authorize("admin")]
 [ApiVersion(ShokoArrConstants.ApiVersion)]
-[Route("/api/v{version:apiVersion}/ShokoSonarr/[controller]")]
+[Route("/api/v{version:apiVersion}/ShokoArr/[controller]")]
 public abstract class ShokoArrBaseController : ControllerBase
 {
     /// <summary>Standard response envelope for ShokoArr API endpoints.</summary>

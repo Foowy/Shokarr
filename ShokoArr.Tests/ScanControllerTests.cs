@@ -22,7 +22,7 @@ public class ScanControllerTests : IDisposable
 
     public ScanControllerTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-sonarr-scan-controller-tests-" + Guid.NewGuid());
+        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-arr-scan-controller-tests-" + Guid.NewGuid());
         Directory.CreateDirectory(_tempDir);
         _cacheStore = new ScanCacheStore(_tempDir);
     }
