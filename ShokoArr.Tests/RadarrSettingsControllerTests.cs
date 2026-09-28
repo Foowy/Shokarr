@@ -34,19 +34,49 @@ public class RadarrSettingsControllerTests
         var source = Stored();
         var controller = new RadarrSettingsController(source, null!);
 
-        controller.SaveSettings(new RadarrSettings { BaseUrl = "http://radarr2" });
+        controller.SaveSettings(new RadarrSettings { BaseUrl = "HTTP://RADARR" });
 
-        Assert.Equal("http://radarr2", source.Radarr.BaseUrl);
+        Assert.Equal("HTTP://RADARR", source.Radarr.BaseUrl);
         Assert.Equal("secret", source.Radarr.ApiKey);
         Assert.Equal(2, source.Radarr.QualityProfileId);
         Assert.Equal("/movies", source.Radarr.RootFolderPath);
         Assert.Equal("sk", source.Sonarr.ApiKey);
     }
 
+    [Fact]
+    public void SaveSettings_NewUrlWithBlankKey_IsRefusedAndNothingSaved()
+    {
+        var source = Stored();
+        var controller = new RadarrSettingsController(source, null!);
+
+        var ok = Assert.IsType<OkObjectResult>(controller.SaveSettings(new RadarrSettings { BaseUrl = "http://elsewhere" }));
+
+        Assert.Equal(ArrUrlRules.KeyRequiredMessage, Assert.IsType<ShokoArrBaseController.ApiResponse<object>>(ok.Value).Message);
+        Assert.Equal("http://radarr", source.Radarr.BaseUrl);
+        Assert.Equal("secret", source.Radarr.ApiKey);
+    }
+
+    [Fact]
+    public async Task TestConnection_NewUrlWithBlankKey_NeverContactsHost()
+    {
+        var handler = new StubHandler("{}");
+        var controller = new RadarrSettingsController(Stored(), new RadarrClient(new HttpClient(handler)));
+
+        var ok = Assert.IsType<OkObjectResult>(await controller.TestConnection(new RadarrSettings { BaseUrl = "http://attacker" }));
+
+        Assert.Equal(ArrUrlRules.KeyRequiredMessage, Assert.IsType<ShokoArrBaseController.ApiResponse<object>>(ok.Value).Message);
+        Assert.Equal(0, handler.Calls);
+    }
+
     private class StubHandler(string json) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) });
+        public int Calls { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) });
+        }
     }
 
     [Fact]

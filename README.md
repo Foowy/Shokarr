@@ -5,7 +5,7 @@
 [![CI](https://github.com/Foowy/ShokoArr/actions/workflows/ci.yml/badge.svg)](https://github.com/Foowy/ShokoArr/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-> **Renamed from ShokoSonarr.** The plugin now handles Radarr as well as Sonarr, so the "Sonarr" name no longer fit. Existing installs upgrade in place: the plugin ID, stored settings and API routes are unchanged, and the old GitHub URLs redirect. The plugin folder and DLL are now `ShokoArr`, so remove any old `plugins/ShokoSonarr/` folder when installing manually.
+> **Renamed from ShokoSonarr.** The plugin now handles Radarr as well as Sonarr, so the "Sonarr" name no longer fit. Existing installs upgrade in place: the plugin ID and stored settings are unchanged, and the old GitHub URLs redirect. The plugin folder and DLL are now `ShokoArr`, so remove any old `plugins/ShokoSonarr/` folder when installing manually. From 1.0 the API routes and dashboard URL use `ShokoArr` instead of `ShokoSonarr`, and the plugin's data moves from `plugins/shoko_sonarr/` to `plugins/shoko_arr/` automatically on first start.
 
 A [ShokoServer](https://github.com/ShokoAnime/ShokoServer) plugin that scans your anime collection for missing episodes and bridges them to [Sonarr](https://sonarr.tv/) for automated download — with a related-series discovery feed and a [Radarr](https://radarr.video/) bolt-on for movie-type suggestions.
 
@@ -41,7 +41,7 @@ The core missing-episode scan only covers series Shoko already has *some* files 
 Single-pane-of-glass UI embedded in Shoko's WebUI. Open it from Shoko's plugin pages list, or go directly to:
 
 ```
-http://<your-shoko-host>:<port>/api/plugin/ShokoSonarr/dashboard
+http://<your-shoko-host>:<port>/api/plugin/ShokoArr/dashboard
 ```
 
 - **Connection health** — a persistent Sonarr-reachable/unreachable indicator in the header, refreshed every 60s.

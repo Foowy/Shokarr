@@ -1,12 +1,14 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ShokoArr.Controllers;
 
 /// <summary>Shared route/versioning setup and response envelope for all ShokoArr API controllers.</summary>
 [ApiController]
+[Authorize("admin")]
 [ApiVersion(ShokoArrConstants.ApiVersion)]
-[Route("/api/v{version:apiVersion}/ShokoSonarr/[controller]")]
+[Route("/api/v{version:apiVersion}/ShokoArr/[controller]")]
 public abstract class ShokoArrBaseController : ControllerBase
 {
     /// <summary>Standard response envelope for ShokoArr API endpoints.</summary>

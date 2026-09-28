@@ -29,7 +29,7 @@ public class MissingEpisodeScannerTests : IDisposable
 
     public MissingEpisodeScannerTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-sonarr-tests-" + Guid.NewGuid());
+        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-arr-tests-" + Guid.NewGuid());
         Directory.CreateDirectory(_tempDir);
         _cacheStore = new ScanCacheStore(_tempDir);
     }

@@ -30,15 +30,20 @@ public class SettingsController(ISettingsSource settingsSource, SonarrClient son
 
     /// <summary>Saves new Sonarr settings. If the incoming API key, quality profile, or root folder is blank/unset
     /// (e.g. the dashboard re-saved without re-testing the connection, which is the only way those dropdowns get
-    /// populated), the previously-stored value is kept instead of being wiped.</summary>
+    /// populated), the previously-stored value is kept instead of being wiped. The stored API key is only kept when
+    /// the URL is unchanged.</summary>
     /// <param name="settings">The settings to save.</param>
     /// <returns>200 on success.</returns>
     [HttpPut]
     public IActionResult SaveSettings([FromBody] SonarrSettings settings)
     {
         var stored = settingsSource.GetSonarr();
-        if (string.IsNullOrEmpty(settings.ApiKey))
-            settings.ApiKey = stored.ApiKey;
+        var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, stored);
+        if (error is null && !string.IsNullOrEmpty(settings.NotificationWebhookUrl) && !ArrUrlRules.IsHttpUrl(settings.NotificationWebhookUrl))
+            error = "Webhook " + ArrUrlRules.InvalidUrlMessage;
+        if (error is not null)
+            return Ok(new ApiResponse<object>(Success: false, Message: error, Data: null));
+        settings.ApiKey = apiKey;
         if (settings.QualityProfileId is null)
             settings.QualityProfileId = stored.QualityProfileId;
         if (string.IsNullOrEmpty(settings.RootFolderPath))
@@ -51,14 +56,17 @@ public class SettingsController(ISettingsSource settingsSource, SonarrClient son
     }
 
     /// <summary>Tests connectivity to Sonarr using the given (not-yet-saved) settings. A blank API key falls back
-    /// to the stored one, since the dashboard always submits a blank key unless the user just retyped it.</summary>
+    /// to the stored one when the URL is unchanged, since the dashboard always submits a blank key unless the user
+    /// just retyped it.</summary>
     /// <param name="settings">The settings to test.</param>
     /// <returns>200 with success=true if reachable, success=false with an error message otherwise.</returns>
     [HttpPost("test-connection")]
     public async Task<IActionResult> TestConnection([FromBody] SonarrSettings settings)
     {
-        if (string.IsNullOrEmpty(settings.ApiKey))
-            settings.ApiKey = settingsSource.GetSonarr().ApiKey;
+        var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, settingsSource.GetSonarr());
+        if (error is not null)
+            return Ok(new ApiResponse<object>(Success: false, Message: error, Data: null));
+        settings.ApiKey = apiKey;
 
         var result = await sonarrClient.TestConnectionAsync(settings);
         return Ok(new ApiResponse<object>(Success: result.Success, Message: result.ErrorMessage, Data: null));
@@ -98,8 +106,10 @@ public class SettingsController(ISettingsSource settingsSource, SonarrClient son
     [HttpPost("sonarr-options")]
     public async Task<IActionResult> GetSonarrOptions([FromBody] SonarrSettings settings)
     {
-        if (string.IsNullOrEmpty(settings.ApiKey))
-            settings.ApiKey = settingsSource.GetSonarr().ApiKey;
+        var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, settingsSource.GetSonarr());
+        if (error is not null)
+            return Ok(new ApiResponse<object>(Success: false, Message: error, Data: null));
+        settings.ApiKey = apiKey;
 
         var profiles = await sonarrClient.GetQualityProfilesAsync(settings);
         if (!profiles.Success)
