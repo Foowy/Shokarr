@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/ShokoArr/master/assets/icon.png",
   "releases": [
     {
+      "version": "0.9.1",
+      "tag": "v0.9.1",
+      "source_revision": "07f38a5e34d49182e06e5b6d3e87452520fb6bf4",
+      "released_at": "2026-09-28T16:42:45Z",
+      "channel": "Stable",
+      "release_notes": "## What's Changed\n* Bump the nuget group with 2 updates by @dependabot[bot] in https://github.com/Foowy/ShokoArr/pull/62\n* Align build and test tooling with ShokoServer by @Foowy in https://github.com/Foowy/ShokoArr/pull/63\n* chore(deps): bump github/codeql-action from 4.38.0 to 4.38.1 by @dependabot[bot] in https://github.com/Foowy/ShokoArr/pull/61\n* Ignore xunit major bumps in Dependabot by @Foowy in https://github.com/Foowy/ShokoArr/pull/65\n* Run CodeQL with build-mode none by @Foowy in https://github.com/Foowy/ShokoArr/pull/66\n* chore(deps): bump github/codeql-action from 4.38.1 to 4.38.2 by @dependabot[bot] in https://github.com/Foowy/ShokoArr/pull/67\n* chore: bump version to 0.9.1 by @Foowy in https://github.com/Foowy/ShokoArr/pull/68\n\n\n**Full Changelog**: https://github.com/Foowy/ShokoArr/compare/v0.9.0...v0.9.1",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v0.9.1/ShokoArr-v0.9.1_linux-arm64.zip",
+          "checksum": "8f1576a25828f4623807c7531490becc1a87162c7220d40a82dc099071c1068d"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v0.9.1/ShokoArr-v0.9.1_linux-x64.zip",
+          "checksum": "fb025010b5dafa4478677ef592b51d97196d83c8797b1456211fbdd4c34832ee"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v0.9.1/ShokoArr-v0.9.1_win-x64.zip",
+          "checksum": "2972b560cae95ba73bbb82c851058f4eda31061a52dbc3cf77f5f01e8ce124f0"
+        }
+      ]
+    },
+    {
       "version": "0.9.0",
       "tag": "v0.9.0",
       "source_revision": "db4bd349beda77664a5e1e91def4e28c452fb799",
