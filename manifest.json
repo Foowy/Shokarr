@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/ShokoArr/master/assets/icon.png",
   "releases": [
     {
+      "version": "0.9.3",
+      "tag": "v0.9.3",
+      "source_revision": "09949feb86cad62b0b576e274990bd8f14ada3e4",
+      "released_at": "2026-09-28T17:13:11Z",
+      "channel": "Stable",
+      "release_notes": "## What's Changed\n* Embed a plugin thumbnail by @Foowy in https://github.com/Foowy/ShokoArr/pull/71\n* chore: bump version to 0.9.3 by @Foowy in https://github.com/Foowy/ShokoArr/pull/72\n\n\n**Full Changelog**: https://github.com/Foowy/ShokoArr/compare/v0.9.2...v0.9.3",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v0.9.3/ShokoArr-v0.9.3_linux-arm64.zip",
+          "checksum": "2e9703e0d9c737845e06ee49f243aa00bce90f6f4ee158204a5d4a52fc8cfc08"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v0.9.3/ShokoArr-v0.9.3_linux-x64.zip",
+          "checksum": "4f735605b35a334a9d808affaa888bd9a9739553f51b3e0f5c0e1d0a03f508ba"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/ShokoArr/releases/download/v0.9.3/ShokoArr-v0.9.3_win-x64.zip",
+          "checksum": "8be4e3c5500d63be098297f328125bde238565a5f8b0823f26ef18df2e6bfcaa"
+        }
+      ]
+    },
+    {
       "version": "0.9.2",
       "tag": "v0.9.2",
       "source_revision": "3c0b35796d8c82d353e85d8fd7d71241cde038d0",
