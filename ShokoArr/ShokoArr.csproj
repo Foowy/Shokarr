@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="assets\Icon.png" LogicalName="ShokoArr.assets.Icon.png" />
+    <EmbeddedResource Include="assets\Thumbnail.png" LogicalName="ShokoArr.assets.Thumbnail.png" />
   </ItemGroup>
 
   <ItemGroup>
