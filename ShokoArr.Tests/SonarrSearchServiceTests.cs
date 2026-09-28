@@ -66,10 +66,10 @@ public class SonarrSearchServiceTests : IDisposable
         var service = MakeService(client);
         var series = SeriesWith((anidbId: 5014, epNum: 14, special: false, title: "Episode 14"));
 
-        var result = await service.MonitorAndSearchAsync(TestSettings, shokoSeriesId: 1, sonarrSeriesId: 9, anidbEpisodeIds: [5014], series);
+        var result = await service.MonitorAndSearchAsync(TestSettings, shokoSeriesId: 1, sonarrSeriesId: 9, anidbEpisodeIds: [5014], series, ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
-        var body = await searchReq!.Content!.ReadAsStringAsync();
+        var body = await searchReq!.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("202", body);            // mapped to the season-2 episode (abs 14)
         Assert.DoesNotContain("102", body);       // not the season-1 episode
     }
@@ -84,7 +84,7 @@ public class SonarrSearchServiceTests : IDisposable
         });
         var service = MakeService(client);
 
-        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5001], SeriesWith((5001, 1, false, "Episode 1")), "some-anime");
+        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5001], SeriesWith((5001, 1, false, "Episode 1")), "some-anime", TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal("some-anime", _stores[^1].GetPendingSearches().Single().SonarrTitleSlug);
@@ -110,10 +110,10 @@ public class SonarrSearchServiceTests : IDisposable
         var service = MakeService(client);
         var series = SeriesWith((anidbId: 5900, epNum: 1, special: true, title: "OVA 1"));
 
-        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5900], series);
+        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5900], series, ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
-        Assert.Contains("300", await searchReq!.Content!.ReadAsStringAsync());
+        Assert.Contains("300", await searchReq!.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -135,9 +135,9 @@ public class SonarrSearchServiceTests : IDisposable
         var service = MakeService(client);
         var series = SeriesWith((anidbId: 5002, epNum: 2, special: false, title: "Episode 2"));
 
-        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5002], series);
+        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5002], series, ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
-        Assert.Contains("402", await searchReq!.Content!.ReadAsStringAsync());
+        Assert.Contains("402", await searchReq!.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 }

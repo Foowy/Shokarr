@@ -49,7 +49,7 @@ public class SonarrEpisodeStatusResolverTests
     public async Task Apply_MapsDownloadedDownloadingAndNone()
     {
         var handler = new CountingHandler(HappyPath);
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken);
         var series = Series(1, 1, 2, 3, 9);
 
         await session.ApplyAsync(series);
@@ -63,7 +63,7 @@ public class SonarrEpisodeStatusResolverTests
         var handler = new CountingHandler(r => r.RequestUri!.PathAndQuery.StartsWith("/api/v3/queue")
             ? Json("""{"records":[{"episodeId":104}]}""")
             : HappyPath(r));
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken);
         var series = Series(1, 4);
 
         await session.ApplyAsync(series);
@@ -75,7 +75,7 @@ public class SonarrEpisodeStatusResolverTests
     public async Task Apply_NoTvdbId_LeavesNoneWithoutCalls()
     {
         var handler = new CountingHandler(HappyPath);
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken);
         var series = Series(null, 1);
 
         await session.ApplyAsync(series);
@@ -88,7 +88,7 @@ public class SonarrEpisodeStatusResolverTests
     public async Task Apply_SeriesNotInSonarr_LeavesNone()
     {
         var handler = new CountingHandler(r => r.RequestUri!.PathAndQuery.StartsWith("/api/v3/series") ? Json("[]") : HappyPath(r));
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken);
         var series = Series(1, 1);
 
         await session.ApplyAsync(series);
@@ -100,7 +100,7 @@ public class SonarrEpisodeStatusResolverTests
     public async Task Begin_EmptyBaseUrl_MakesNoHttpCalls()
     {
         var handler = new CountingHandler(HappyPath);
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(new SonarrSettings(), default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(new SonarrSettings(), TestContext.Current.CancellationToken);
         var series = Series(1, 1);
 
         await session.ApplyAsync(series);
@@ -113,7 +113,7 @@ public class SonarrEpisodeStatusResolverTests
     public async Task Apply_QueueFetchedOncePerScan()
     {
         var handler = new CountingHandler(HappyPath);
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken);
 
         await session.ApplyAsync(Series(1, 1));
         await session.ApplyAsync(Series(2, 1));
@@ -130,7 +130,7 @@ public class SonarrEpisodeStatusResolverTests
         var handler = new CountingHandler(_ => handlerThrows
             ? throw new HttpRequestException("connection refused")
             : new HttpResponseMessage(HttpStatusCode.InternalServerError));
-        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, default);
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken);
         var all = new[] { Series(1, 1), Series(2, 1), Series(3, 1) };
 
         foreach (var s in all)
