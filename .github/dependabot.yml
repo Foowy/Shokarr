@@ -15,6 +15,9 @@ updates:
       - dependency-name: "Asp.Versioning.*"
       # Also compile-only; keep at the host's bundled version (currently 6.2.0).
       - dependency-name: "NLog"
+      # Track ShokoServer's test stack; xunit v4 breaks dotnet test there.
+      - dependency-name: "xunit.*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
