@@ -30,7 +30,7 @@ public class RadarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
         var client = new RadarrClient(new HttpClient(handler));
 
-        var result = await client.TestConnectionAsync(TestSettings);
+        var result = await client.TestConnectionAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal("testkey", handler.LastRequest!.Headers.GetValues("X-Api-Key").Single());
@@ -45,7 +45,7 @@ public class RadarrClientTests
         });
         var client = new RadarrClient(new HttpClient(handler));
 
-        var result = await client.LookupByTitleAsync(TestSettings, "Spirited Away");
+        var result = await client.LookupByTitleAsync(TestSettings, "Spirited Away", TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
@@ -62,7 +62,7 @@ public class RadarrClientTests
         });
         var client = new RadarrClient(new HttpClient(handler));
 
-        var result = await client.AddMovieAsync(TestSettings, tmdbId: 129, title: "Spirited Away", qualityProfileId: 3, rootFolderPath: "/movies", searchOnAdd: true);
+        var result = await client.AddMovieAsync(TestSettings, tmdbId: 129, title: "Spirited Away", qualityProfileId: 3, rootFolderPath: "/movies", searchOnAdd: true, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal(10, result.Data);
@@ -79,7 +79,7 @@ public class RadarrClientTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.Created) { Content = new StringContent("{}") });
         var client = new RadarrClient(new HttpClient(handler));
 
-        var result = await client.AddMovieAsync(TestSettings, tmdbId: 129, title: "Spirited Away", qualityProfileId: 3, rootFolderPath: "/movies", searchOnAdd: true);
+        var result = await client.AddMovieAsync(TestSettings, tmdbId: 129, title: "Spirited Away", qualityProfileId: 3, rootFolderPath: "/movies", searchOnAdd: true, TestContext.Current.CancellationToken);
 
         Assert.False(result.Success);
     }
@@ -93,7 +93,7 @@ public class RadarrClientTests
         });
         var client = new RadarrClient(new HttpClient(handler));
 
-        var result = await client.GetQualityProfilesAsync(TestSettings);
+        var result = await client.GetQualityProfilesAsync(TestSettings, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal("HD-1080p", result.Data![0].Name);

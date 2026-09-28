@@ -23,7 +23,7 @@ public class NotificationServiceTests
         var handler = new FakeHandler(_ => new HttpResponseMessage(System.Net.HttpStatusCode.OK));
         var service = new NotificationService(new HttpClient(handler));
 
-        await service.NotifyAsync(new SonarrSettings(), "test message");
+        await service.NotifyAsync(new SonarrSettings(), "test message", TestContext.Current.CancellationToken);
 
         Assert.Empty(handler.Requests);
     }
@@ -35,10 +35,10 @@ public class NotificationServiceTests
         var service = new NotificationService(new HttpClient(handler));
         var settings = new SonarrSettings { NotificationWebhookUrl = "https://discord.example/webhooks/123/abc" };
 
-        await service.NotifyAsync(settings, "test message");
+        await service.NotifyAsync(settings, "test message", TestContext.Current.CancellationToken);
 
         Assert.Single(handler.Requests);
-        var body = await handler.Requests[0].Content!.ReadAsStringAsync();
+        var body = await handler.Requests[0].Content!.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("test message", body);
         Assert.Equal("https://discord.example/webhooks/123/abc", handler.Requests[0].RequestUri!.ToString());
     }
@@ -49,7 +49,7 @@ public class NotificationServiceTests
         var service = new NotificationService(new HttpClient(new FakeHandler(_ => throw new HttpRequestException("boom"))));
         var settings = new SonarrSettings { NotificationWebhookUrl = "https://discord.example/webhooks/123/abc" };
 
-        var exception = await Record.ExceptionAsync(() => service.NotifyAsync(settings, "test message"));
+        var exception = await Record.ExceptionAsync(() => service.NotifyAsync(settings, "test message", TestContext.Current.CancellationToken));
 
         Assert.Null(exception);
     }
@@ -61,7 +61,7 @@ public class NotificationServiceTests
         var service = new NotificationService(new HttpClient(handler));
         var settings = new SonarrSettings { NotificationWebhookUrl = "https://discord.example/webhooks/123/abc" };
 
-        var exception = await Record.ExceptionAsync(() => service.NotifyAsync(settings, "test message"));
+        var exception = await Record.ExceptionAsync(() => service.NotifyAsync(settings, "test message", TestContext.Current.CancellationToken));
 
         Assert.Null(exception);
     }
