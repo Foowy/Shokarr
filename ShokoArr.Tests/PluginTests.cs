@@ -7,10 +7,13 @@ public class PluginTests
     private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47];
 
     [Fact]
-    public void EmbeddedIconResourceName_PointsAtAnEmbeddedPng()
-    {
-        var name = new Plugin().EmbeddedIconResourceName;
+    public void EmbeddedIconResourceName_PointsAtAnEmbeddedPng() => AssertEmbeddedPng(new Plugin().EmbeddedIconResourceName);
 
+    [Fact]
+    public void EmbeddedThumbnailResourceName_PointsAtAnEmbeddedPng() => AssertEmbeddedPng(new Plugin().EmbeddedThumbnailResourceName);
+
+    private static void AssertEmbeddedPng(string? name)
+    {
         Assert.NotNull(name);
         using var stream = typeof(Plugin).Assembly.GetManifestResourceStream(name);
         Assert.NotNull(stream);

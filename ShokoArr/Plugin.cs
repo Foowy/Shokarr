@@ -16,6 +16,9 @@ public class Plugin : IPlugin
     public string? Description => ShokoArrConstants.Description;
 
     /// <inheritdoc/>
+    public string? EmbeddedThumbnailResourceName => "ShokoArr.assets.Thumbnail.png";
+
+    /// <inheritdoc/>
     public string? EmbeddedIconResourceName => "ShokoArr.assets.Icon.png";
 
     /// <inheritdoc/>
