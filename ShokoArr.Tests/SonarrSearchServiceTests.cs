@@ -30,7 +30,7 @@ public class SonarrSearchServiceTests : IDisposable
 
     private SonarrSearchService MakeService(SonarrClient client)
     {
-        var cacheStore = new ScanCacheStore(Path.Combine(Path.GetTempPath(), "shoko-sonarr-tests-" + Guid.NewGuid()));
+        var cacheStore = new ScanCacheStore(Path.Combine(Path.GetTempPath(), "shoko-arr-tests-" + Guid.NewGuid()));
         _stores.Add(cacheStore);
         var notificationService = new NotificationService(new HttpClient(new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK))));
         return new SonarrSearchService(client, cacheStore, notificationService);

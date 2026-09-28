@@ -18,7 +18,7 @@ public class SonarrControllerTests : IDisposable
 
     public SonarrControllerTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-sonarr-controller-tests-" + Guid.NewGuid());
+        _tempDir = Path.Combine(Path.GetTempPath(), "shoko-arr-controller-tests-" + Guid.NewGuid());
         Directory.CreateDirectory(_tempDir);
         _cacheStore = new ScanCacheStore(_tempDir);
         _settings.Sonarr = new SonarrSettings { BaseUrl = "http://sonarr.local:8989", ApiKey = "testkey" };
