@@ -22,13 +22,15 @@ public class RadarrSettingsController(ISettingsSource settingsSource, RadarrClie
         return Ok(new ApiResponse<RadarrSettings>(Success: true, Message: null, Data: masked));
     }
 
-    /// <summary>Saves new Radarr settings. A blank API key, quality profile, or root folder preserves the previously-stored value, same as SettingsController.SaveSettings.</summary>
+    /// <summary>Saves new Radarr settings. A blank API key, quality profile, or root folder preserves the previously-stored value (the key only when the URL is unchanged), same as SettingsController.SaveSettings.</summary>
     [HttpPut]
     public IActionResult SaveSettings([FromBody] RadarrSettings settings)
     {
         var stored = settingsSource.GetRadarr();
-        if (string.IsNullOrEmpty(settings.ApiKey))
-            settings.ApiKey = stored.ApiKey;
+        var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, stored);
+        if (error is not null)
+            return Ok(new ApiResponse<object>(Success: false, Message: error, Data: null));
+        settings.ApiKey = apiKey;
         if (settings.QualityProfileId is null)
             settings.QualityProfileId = stored.QualityProfileId;
         if (string.IsNullOrEmpty(settings.RootFolderPath))
@@ -38,12 +40,14 @@ public class RadarrSettingsController(ISettingsSource settingsSource, RadarrClie
         return Ok(new ApiResponse<object>(Success: true, Message: null, Data: null));
     }
 
-    /// <summary>Tests connectivity to Radarr using the given (not-yet-saved) settings. A blank API key falls back to the stored one.</summary>
+    /// <summary>Tests connectivity to Radarr using the given (not-yet-saved) settings. A blank API key falls back to the stored one when the URL is unchanged.</summary>
     [HttpPost("test-connection")]
     public async Task<IActionResult> TestConnection([FromBody] RadarrSettings settings)
     {
-        if (string.IsNullOrEmpty(settings.ApiKey))
-            settings.ApiKey = settingsSource.GetRadarr().ApiKey;
+        var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, settingsSource.GetRadarr());
+        if (error is not null)
+            return Ok(new ApiResponse<object>(Success: false, Message: error, Data: null));
+        settings.ApiKey = apiKey;
 
         var result = await radarrClient.TestConnectionAsync(settings);
         return Ok(new ApiResponse<object>(Success: result.Success, Message: result.ErrorMessage, Data: null));
@@ -53,8 +57,10 @@ public class RadarrSettingsController(ISettingsSource settingsSource, RadarrClie
     [HttpPost("radarr-options")]
     public async Task<IActionResult> GetRadarrOptions([FromBody] RadarrSettings settings)
     {
-        if (string.IsNullOrEmpty(settings.ApiKey))
-            settings.ApiKey = settingsSource.GetRadarr().ApiKey;
+        var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, settingsSource.GetRadarr());
+        if (error is not null)
+            return Ok(new ApiResponse<object>(Success: false, Message: error, Data: null));
+        settings.ApiKey = apiKey;
 
         var profiles = await radarrClient.GetQualityProfilesAsync(settings);
         if (!profiles.Success)
