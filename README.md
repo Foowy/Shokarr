@@ -9,6 +9,8 @@
 
 A [ShokoServer](https://github.com/ShokoAnime/ShokoServer) plugin that scans your anime collection for missing episodes and bridges them to [Sonarr](https://sonarr.tv/) for automated download — with a related-series discovery feed and a [Radarr](https://radarr.video/) bolt-on for movie-type suggestions.
 
+> **Targets Shoko 6.0 pre-releases.** Shoko Arr is built against pre-release versions of `Shoko.Abstractions` 6.0, and ShokoServer 6.0 itself is only available as daily/dev builds so far. Shoko's plugin API can still change between those builds, so a Shoko update may break Shoko Arr until a matching Shoko Arr release ships. It does not run on ShokoServer 5.x.
+
 ## ELI5
 
 Shoko tracks what anime episodes you already have. Sonarr downloads episodes for you. This plugin sits between them: it scans your Shoko library for episodes you're missing, matches each series to the right one in Sonarr, and tells Sonarr "go find these specific episodes" — no manual searching, no adding whole seasons you already have. It also surfaces AniDB-related series you don't own at all yet (sequels, prequels, side stories) as one-click suggestions, routed to Sonarr or Radarr depending on whether the suggestion is a series or a movie.
