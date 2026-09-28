@@ -84,10 +84,9 @@ jobs:
           fi
 
       - name: Publish
-        run: dotnet publish ShokoArr/ShokoArr.csproj -c Release -r ${{ matrix.rid }} --no-self-contained -o publish
+        run: dotnet publish ShokoArr/ShokoArr.csproj -c Release -r ${{ matrix.rid }} --no-self-contained -o publish -p:ReleaseChannel=${{ steps.vars.outputs.release_channel }}
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-          RELEASE_CHANNEL: ${{ steps.vars.outputs.release_channel }}
 
       - name: Package ZIP (Linux)
         if: runner.os == 'Linux'
