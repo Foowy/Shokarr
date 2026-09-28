@@ -26,10 +26,9 @@ Shoko tracks what anime episodes you already have. Sonarr downloads episodes for
 - **Filters out noise**: optionally exclude specials (globally or per-series), and optionally hide episodes that haven't aired yet — since there's nothing for Sonarr to find until the air date passes.
 - **Suggests what you're missing entirely**: surfaces AniDB-related series (sequels, prequels, side stories) you own zero episodes of, from series you already have. Movie-type suggestions route to Radarr; everything else routes to Sonarr, both via a confirmable title search.
 - **Propagates Shoko's group metadata as a Sonarr tag** on add, so Sonarr-side automation can key off which franchise a series belongs to. A manual "Sync Tags" action retroactively tags series added before this existed.
-- **Lets a series override the global quality profile/root folder** — useful for a group that should land somewhere different than everything else.
+- **Lets a series override the global quality profile/root folder** - useful for a group that should land somewhere different than everything else.
 - **Bulk actions** — multi-select series to apply a specials override or trigger Add-to-Sonarr/Search across all of them at once.
 - **Notifies** an optional Discord-compatible webhook when a search is triggered, a movie/series discovery is added, or a stale pending entry expires.
-- **Registers native Shoko Actions**: "Scan for Missing Episodes" (global) and "Search Missing Episodes in Sonarr" (per series) appear in Shoko's Actions menu, alongside the dashboard.
 - **Shows Sonarr's live reachability** in the dashboard header at a glance, instead of only after pressing Test.
 
 ## What it's not
