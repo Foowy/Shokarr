@@ -20,13 +20,11 @@ public class NotificationService(HttpClient httpClient)
         {
             using var response = await httpClient.PostAsJsonAsync(settings.NotificationWebhookUrl, new { content = message }, ct).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
-                s_logger.Warn("Shokarr: notification webhook returned {StatusCode}: {Message}", (int)response.StatusCode, SanitizeForLog(message));
+                s_logger.Warn("Shokarr: notification webhook returned {StatusCode}: {Message}", (int)response.StatusCode, message.ForLog());
         }
         catch (Exception ex)
         {
-            s_logger.Warn(ex, "Shokarr: failed to post notification: {Message}", SanitizeForLog(message));
+            s_logger.Warn(ex, "Shokarr: failed to post notification: {Message}", message.ForLog());
         }
     }
-
-    private static string SanitizeForLog(string message) => message.Replace("\r", "").Replace("\n", " ");
 }

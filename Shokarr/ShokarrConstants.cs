@@ -9,7 +9,6 @@ public static class ShokarrConstants
     /// <summary>Description of the plugin.</summary>
     public const string Description = "Scans your Shoko collection for missing episodes and bridges them to Sonarr for automated download, with related-series discovery routed to Sonarr or Radarr.";
 
-    /// <summary>Current version string.</summary>
     /// <summary>API version used for versioning attributes and Swagger doc grouping.</summary>
     public const string ApiVersion = "1.0";
 
@@ -25,4 +24,7 @@ public static class ShokarrConstants
 
     /// <summary>Filename of the plugin's LiteDB database.</summary>
     public const string LiteDbFileName = "shokarr.db";
+
+    /// <summary>Placeholder returned in place of a stored secret.</summary>
+    public const string SecretMask = "********";
 }

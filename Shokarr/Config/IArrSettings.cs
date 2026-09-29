@@ -5,5 +5,9 @@ public interface IArrSettings
 {
     string? BaseUrl { get; }
 
-    string? ApiKey { get; }
+    string? ApiKey { get; set; }
+
+    int? QualityProfileId { get; }
+
+    string? RootFolderPath { get; }
 }
