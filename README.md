@@ -1,15 +1,15 @@
-# Shoko Arr
+# Shokarr
 
-<img src="assets/master_shokosonarr.png" width="200" alt="Shoko Arr logo">
+<img src="assets/master_shokosonarr.png" width="200" alt="Shokarr logo">
 
-[![CI](https://github.com/Foowy/ShokoArr/actions/workflows/ci.yml/badge.svg)](https://github.com/Foowy/ShokoArr/actions/workflows/ci.yml)
+[![CI](https://github.com/Foowy/Shokarr/actions/workflows/ci.yml/badge.svg)](https://github.com/Foowy/Shokarr/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-> **Renamed from ShokoSonarr.** The plugin now handles Radarr as well as Sonarr, so the "Sonarr" name no longer fit. Existing installs upgrade in place: the plugin ID and stored settings are unchanged, and the old GitHub URLs redirect. The plugin folder and DLL are now `ShokoArr`, so remove any old `plugins/ShokoSonarr/` folder when installing manually. From 1.0 the API routes and dashboard URL use `ShokoArr` instead of `ShokoSonarr`, and the plugin's data moves from `plugins/shoko_sonarr/` to `plugins/shoko_arr/` automatically on first start.
+> **Renamed to Shokarr.** Existing installs upgrade in place: the plugin ID and stored settings are unchanged, and the old GitHub URLs redirect. The plugin folder and DLL are now `Shokarr`, so remove any old `plugins/ShokoArr/` or `plugins/ShokoSonarr/` folder when installing manually. The API routes and dashboard URL now use `Shokarr` (`/api/v1/Shokarr/*`, `/api/plugin/Shokarr/dashboard`), and the plugin's data moves from `plugins/shoko_arr/` (or `plugins/shoko_sonarr/`) to `plugins/shokarr_data/` automatically on first start.
 
 A [ShokoServer](https://github.com/ShokoAnime/ShokoServer) plugin that scans your anime collection for missing episodes and bridges them to [Sonarr](https://sonarr.tv/) for automated download — with a related-series discovery feed and a [Radarr](https://radarr.video/) bolt-on for movie-type suggestions.
 
-> **Targets Shoko 6.0 pre-releases.** Shoko Arr is built against pre-release versions of `Shoko.Abstractions` 6.0, and ShokoServer 6.0 itself is only available as daily/dev builds so far. Shoko's plugin API can still change between those builds, so a Shoko update may break Shoko Arr until a matching Shoko Arr release ships. It does not run on ShokoServer 5.x.
+> **Targets Shoko 6.0 pre-releases.** Shokarr is built against pre-release versions of `Shoko.Abstractions` 6.0, and ShokoServer 6.0 itself is only available as daily/dev builds so far. Shoko's plugin API can still change between those builds, so a Shoko update may break Shokarr until a matching Shokarr release ships. It does not run on ShokoServer 5.x.
 
 ## ELI5
 
@@ -40,7 +40,7 @@ The core missing-episode scan only covers series Shoko already has *some* files 
 Single-pane-of-glass UI embedded in Shoko's WebUI. Open it from Shoko's plugin pages list, or go directly to:
 
 ```
-http://<your-shoko-host>:<port>/api/plugin/ShokoArr/dashboard
+http://<your-shoko-host>:<port>/api/plugin/Shokarr/dashboard
 ```
 
 - **Connection health** — a persistent Sonarr-reachable/unreachable indicator in the header, refreshed every 60s.
@@ -57,7 +57,7 @@ http://<your-shoko-host>:<port>/api/plugin/ShokoArr/dashboard
 
 ### First-time setup
 
-1. Open the ShokoArr dashboard and go to the **Settings** panel.
+1. Open the Shokarr dashboard and go to the **Settings** panel.
 2. Enter your Sonarr base URL and API key (Sonarr, Settings, General).
 3. Press **Test Connection** to load the quality profile and root folder dropdowns.
 4. Pick a profile and folder, then **Save**.
@@ -74,9 +74,9 @@ Existing settings are migrated automatically on first start. Settings are stored
 1. Open the Shoko Web UI and navigate to **Settings → Plugins → Repositories**.
 2. Add the manifest URL:
    ```
-   https://raw.githubusercontent.com/Foowy/ShokoArr/master/manifest.json
+   https://raw.githubusercontent.com/Foowy/Shokarr/master/manifest.json
    ```
-3. Go to **Settings → Plugins → Browse** and find **Shoko Arr**.
+3. Go to **Settings → Plugins → Browse** and find **Shokarr**.
 4. Click **Install** on the desired version.
 5. Restart Shoko.
 
@@ -84,9 +84,9 @@ New releases show up under **Settings → Plugins → Updates**. The manifest is
 
 ### Manual
 
-1. Download the latest `ShokoArr-v<version>_<runtime>.zip` for your platform (`linux-x64`, `linux-arm64` or `win-x64`) from the
+1. Download the latest `Shokarr-v<version>_<runtime>.zip` for your platform (`linux-x64`, `linux-arm64` or `win-x64`) from the
    [Releases](../../releases) page.
-2. Extract the ZIP into a `ShokoArr` folder inside your Shoko **plugins** folder.
+2. Extract the ZIP into a `Shokarr` folder inside your Shoko **plugins** folder.
 3. Restart Shoko.
 
 Plugins only load when Shoko starts, so copying the files in has no effect until the restart.

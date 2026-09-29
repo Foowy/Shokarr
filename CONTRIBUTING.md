@@ -1,12 +1,12 @@
-# Contributing to ShokoArr
+# Contributing to Shokarr
 
 Thanks for helping out. Bug reports, feature ideas and pull requests are all welcome.
 Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Reporting bugs and requesting features
 
-Open an [issue](https://github.com/Foowy/ShokoArr/issues/new/choose) using the matching template.
-For bugs, include your ShokoArr version, Shoko Server version and relevant log lines
+Open an [issue](https://github.com/Foowy/Shokarr/issues/new/choose) using the matching template.
+For bugs, include your Shokarr version, Shoko Server version and relevant log lines
 (remove API keys first). Security problems go through the private flow in [SECURITY.md](SECURITY.md),
 not a public issue.
 

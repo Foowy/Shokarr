@@ -1,4 +1,4 @@
-name: Build & Release ShokoArr
+name: Build & Release Shokarr
 run-name: "${{ github.event_name == 'workflow_dispatch' && format('Manual Build: {0}', github.event.inputs.tag_name) || format('{0}', github.event.release.name || github.event.release.tag_name) }}"
 
 on:
@@ -55,9 +55,9 @@ jobs:
             VERSION="${TAG#v}"
             VERSION_BASE=$(echo "$VERSION" | cut -d'.' -f1-3)
 
-            CSPROJ_VERSION=$(grep -oP '<Version>\K[^<]+' ShokoArr/ShokoArr.csproj)
+            CSPROJ_VERSION=$(grep -oP '<Version>\K[^<]+' Shokarr/Shokarr.csproj)
             if [[ "${VERSION_BASE%%-*}" != "$CSPROJ_VERSION" ]]; then
-              echo "::error::Tag $TAG does not match ShokoArr.csproj Version $CSPROJ_VERSION"
+              echo "::error::Tag $TAG does not match Shokarr.csproj Version $CSPROJ_VERSION"
               exit 1
             fi
 
@@ -84,7 +84,7 @@ jobs:
           fi
 
       - name: Publish
-        run: dotnet publish ShokoArr/ShokoArr.csproj -c Release -r ${{ matrix.rid }} --no-self-contained -o publish -p:ReleaseChannel=${{ steps.vars.outputs.release_channel }}
+        run: dotnet publish Shokarr/Shokarr.csproj -c Release -r ${{ matrix.rid }} --no-self-contained -o publish -p:ReleaseChannel=${{ steps.vars.outputs.release_channel }}
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: "1"
 
@@ -93,7 +93,7 @@ jobs:
         id: pkg_linux
         shell: bash
         run: |
-          ZIP_NAME="ShokoArr-${{ steps.vars.outputs.file_ver }}_${{ matrix.rid }}.zip"
+          ZIP_NAME="Shokarr-${{ steps.vars.outputs.file_ver }}_${{ matrix.rid }}.zip"
           cd publish
           zip -r "../$ZIP_NAME" .
           echo "zip_path=$ZIP_NAME" >> "$GITHUB_OUTPUT"
@@ -103,7 +103,7 @@ jobs:
         id: pkg_win
         shell: pwsh
         run: |
-          $ZipName = "ShokoArr-${{ steps.vars.outputs.file_ver }}_${{ matrix.rid }}.zip"
+          $ZipName = "Shokarr-${{ steps.vars.outputs.file_ver }}_${{ matrix.rid }}.zip"
           Compress-Archive -Path publish\* -DestinationPath "$env:GITHUB_WORKSPACE\$ZipName" -Force
           echo "zip_path=$ZipName" >> $env:GITHUB_OUTPUT
 
@@ -121,7 +121,7 @@ jobs:
         if: steps.vars.outputs.is_tag == 'false'
         uses: actions/upload-artifact@v7
         with:
-          name: ShokoArr-${{ steps.vars.outputs.file_ver }}-${{ matrix.rid }}
+          name: Shokarr-${{ steps.vars.outputs.file_ver }}-${{ matrix.rid }}
           path: ${{ runner.os == 'Windows' && steps.pkg_win.outputs.zip_path || steps.pkg_linux.outputs.zip_path }}
 
   update-manifest:
@@ -154,9 +154,9 @@ jobs:
           SOURCE_REVISION=$(git rev-list -n 1 "$TAG")
 
           # Extract Shoko.Abstractions version dynamically from csproj
-          ABSTRACTION_VERSION=$(grep -oP 'PackageReference Include="Shoko\.Abstractions" Version="\K[^"]+' ShokoArr/ShokoArr.csproj | head -1)
+          ABSTRACTION_VERSION=$(grep -oP 'PackageReference Include="Shoko\.Abstractions" Version="\K[^"]+' Shokarr/Shokarr.csproj | head -1)
           if [ -z "$ABSTRACTION_VERSION" ]; then
-            echo "Error: Missing Shoko.Abstractions version in ShokoArr.csproj"
+            echo "Error: Missing Shoko.Abstractions version in Shokarr.csproj"
             exit 1
           fi
           ABSTRACTION_VERSION=$(echo "$ABSTRACTION_VERSION" | cut -d'-' -f1) # Strip the pre-release suffix for manifest compatibility (Remove if pre-release versions are supported in the future)
@@ -169,12 +169,12 @@ jobs:
           CHANNEL=$([[ "$IS_PRERELEASE" == "true" ]] && echo "Dev" || echo "Stable")
 
           # Download all release assets
-          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "ShokoArr-v*.zip"
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "Shokarr-v*.zip"
 
           # Build archives JSON array
           ARCHIVES_JSON="[]"
           shopt -s nullglob
-          for ZIP in ShokoArr-v*.zip; do
+          for ZIP in Shokarr-v*.zip; do
             RID=$(echo "$ZIP" | sed -E 's/.*_(.*)\.zip/\1/')
             CHECKSUM=$(sha256sum "$ZIP" | awk '{ print $1 }')
             URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/${ZIP}"

@@ -13,4 +13,4 @@ labels: bug
 **Plugin version & Shoko Server version**
 
 **Relevant logs**
-`docker logs shoko_server | grep "Shoko Arr"` output, or an excerpt around the error.
+`docker logs shoko_server | grep "Shokarr"` output, or an excerpt around the error.
