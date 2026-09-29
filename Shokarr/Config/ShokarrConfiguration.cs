@@ -133,30 +133,25 @@ public class ShokarrConfiguration : IConfiguration
     }
 
     [CustomAction(Theme = DisplayColorTheme.Primary, Position = DisplayButtonPosition.Top, SectionName = "Sonarr")]
-    public ConfigurationActionResult TestSonarr(ConfigurationActionContext<ShokarrConfiguration> context)
-    {
-        var options = ArrOptionsLoader.LoadAsync(context.PluginManager.GetRequiredService<SonarrClient>(), ToSonarrSettings()).GetAwaiter().GetResult();
-        if (!options.Success)
-        {
-            context.Logger.LogWarning("Sonarr connection test failed: {Error}", options.ErrorMessage!.Replace("\r", "").Replace("\n", " "));
-            return new($"Could not reach Sonarr: {options.ErrorMessage}", DisplayColorTheme.Warning);
-        }
-
-        ArrOptionsLoader.Apply(options.Data!, SonarrQualityProfile, SonarrRootFolder);
-        return new(this);
-    }
+    public ConfigurationActionResult TestSonarr(ConfigurationActionContext<ShokarrConfiguration> context) =>
+        TestArr<SonarrClient>(context, ToSonarrSettings(), SonarrQualityProfile, SonarrRootFolder);
 
     [CustomAction(Theme = DisplayColorTheme.Primary, Position = DisplayButtonPosition.Top, SectionName = "Radarr")]
-    public ConfigurationActionResult TestRadarr(ConfigurationActionContext<ShokarrConfiguration> context)
+    public ConfigurationActionResult TestRadarr(ConfigurationActionContext<ShokarrConfiguration> context) =>
+        TestArr<RadarrClient>(context, ToRadarrSettings(), RadarrQualityProfile, RadarrRootFolder);
+
+    private ConfigurationActionResult TestArr<TClient>(ConfigurationActionContext<ShokarrConfiguration> context, IArrSettings settings, SelectComponent<int> profile, SelectComponent<string> folder)
+        where TClient : ArrClientBase
     {
-        var options = ArrOptionsLoader.LoadAsync(context.PluginManager.GetRequiredService<RadarrClient>(), ToRadarrSettings()).GetAwaiter().GetResult();
+        var name = typeof(TClient).Name.Replace("Client", "");
+        var options = ArrOptionsLoader.LoadAsync(context.PluginManager.GetRequiredService<TClient>(), settings).GetAwaiter().GetResult();
         if (!options.Success)
         {
-            context.Logger.LogWarning("Radarr connection test failed: {Error}", options.ErrorMessage!.Replace("\r", "").Replace("\n", " "));
-            return new($"Could not reach Radarr: {options.ErrorMessage}", DisplayColorTheme.Warning);
+            context.Logger.LogWarning("{Service} connection test failed: {Error}", name, options.ErrorMessage!.ForLog());
+            return new($"Could not reach {name}: {options.ErrorMessage}", DisplayColorTheme.Warning);
         }
 
-        ArrOptionsLoader.Apply(options.Data!, RadarrQualityProfile, RadarrRootFolder);
+        ArrOptionsLoader.Apply(options.Data!, profile, folder);
         return new(this);
     }
 }

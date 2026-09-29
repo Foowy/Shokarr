@@ -379,10 +379,10 @@ async function checkConnectionHealth() {
 checkConnectionHealth();
 setInterval(() => { if (!document.hidden) checkConnectionHealth(); }, HEALTH_CHECK_INTERVAL_MS);
 
-let savedQualityProfileId = null;
-let savedRootFolderPath = null;
-let savedRadarrQualityProfileId = null;
-let savedRadarrRootFolderPath = null;
+const arrServices = {
+  sonarr: { prefix: 'settings', route: '/Settings', label: 'Sonarr', profileId: null, rootFolder: null },
+  radarr: { prefix: 'radarr-settings', route: '/RadarrSettings', label: 'Radarr', profileId: null, rootFolder: null },
+};
 
 function currentSettingsForm() {
   return {
@@ -409,24 +409,33 @@ function populateSelect(id, items, valueKey, labelKey, selectedValue) {
   }
 }
 
-async function loadSonarrOptions(settings) {
-  const result = await fetchJson('/Settings/sonarr-options', { method: 'POST', body: JSON.stringify(settings) });
+async function loadArrOptions(key, settings) {
+  const svc = arrServices[key];
+  const result = await fetchJson(`${svc.route}/${key}-options`, { method: 'POST', body: JSON.stringify(settings) });
   if (!result.Success) {
-    setStatus(`Failed to load Sonarr options: ${result.Message}`, false);
+    setStatus(`Failed to load ${svc.label} options: ${result.Message}`, false);
     return;
   }
-  populateSelect('settings-quality-profile', result.Data.qualityProfiles, 'Id', 'Name', savedQualityProfileId);
-  populateSelect('settings-root-folder', result.Data.rootFolders, 'Path', 'Path', savedRootFolderPath);
+  populateSelect(`${svc.prefix}-quality-profile`, result.Data.qualityProfiles, 'Id', 'Name', svc.profileId);
+  populateSelect(`${svc.prefix}-root-folder`, result.Data.rootFolders, 'Path', 'Path', svc.rootFolder);
 }
 
-async function loadRadarrOptions(settings) {
-  const result = await fetchJson('/RadarrSettings/radarr-options', { method: 'POST', body: JSON.stringify(settings) });
-  if (!result.Success) {
-    setStatus(`Failed to load Radarr options: ${result.Message}`, false);
-    return;
+// The stored API key is masked, not usable to call the service - dropdowns show the saved value as a
+// placeholder option (name resolved server-side, or falls back to the bare ID); Test Connection
+// (re-entering the real key) repopulates them with the full live list.
+async function showSavedArrSelection(key, data) {
+  const svc = arrServices[key];
+  svc.profileId = data.QualityProfileId;
+  svc.rootFolder = data.RootFolderPath;
+  populateSelect(`${svc.prefix}-quality-profile`, svc.profileId ? [{ Id: svc.profileId, Name: `#${svc.profileId}` }] : [], 'Id', 'Name', svc.profileId);
+  populateSelect(`${svc.prefix}-root-folder`, svc.rootFolder ? [{ Path: svc.rootFolder }] : [], 'Path', 'Path', svc.rootFolder);
+  if (svc.profileId) {
+    const profileResult = await fetchJson(`${svc.route}/quality-profile`);
+    if (profileResult.Success)
+      populateSelect(`${svc.prefix}-quality-profile`, [profileResult.Data], 'Id', 'Name', svc.profileId);
+    else
+      setStatus(`Showing ${svc.label} profile #${svc.profileId} - couldn't resolve its name: ${profileResult.Message}`, false);
   }
-  populateSelect('radarr-settings-quality-profile', result.Data.qualityProfiles, 'Id', 'Name', savedRadarrQualityProfileId);
-  populateSelect('radarr-settings-root-folder', result.Data.rootFolders, 'Path', 'Path', savedRadarrRootFolderPath);
 }
 
 async function loadSettings() {
@@ -443,35 +452,12 @@ async function loadSettings() {
   countHeldAsMissing = result.Data.CountSonarrHeldAsMissing !== false;
   document.getElementById('settings-count-sonarr-held').checked = countHeldAsMissing;
   if (lastSeriesList.length) renderSeries({ Data: { Series: lastSeriesList } });
-  savedQualityProfileId = result.Data.QualityProfileId;
-  savedRootFolderPath = result.Data.RootFolderPath;
-  populateSelect('settings-quality-profile', savedQualityProfileId ? [{ Id: savedQualityProfileId, Name: `#${savedQualityProfileId}` }] : [], 'Id', 'Name', savedQualityProfileId);
-  populateSelect('settings-root-folder', savedRootFolderPath ? [{ Path: savedRootFolderPath }] : [], 'Path', 'Path', savedRootFolderPath);
-  // The stored API key is masked here, not usable to call Sonarr - dropdowns above show the saved
-  // value as a placeholder option (name resolved server-side below, or falls back to the bare ID);
-  // Test Connection (re-entering the real key) repopulates them with the full live list from Sonarr.
-  if (savedQualityProfileId) {
-    const profileResult = await fetchJson('/Settings/quality-profile');
-    if (profileResult.Success)
-      populateSelect('settings-quality-profile', [profileResult.Data], 'Id', 'Name', savedQualityProfileId);
-    else
-      setStatus(`Showing profile #${savedQualityProfileId} - couldn't resolve its name: ${profileResult.Message}`, false);
-  }
+  await showSavedArrSelection('sonarr', result.Data);
 
   const radarrResult = await fetchJson('/RadarrSettings');
   document.getElementById('radarr-settings-url').value = radarrResult.Data.BaseUrl || '';
   document.getElementById('radarr-settings-key').placeholder = radarrResult.Data.ApiKey ? 'Key saved (leave blank to keep)' : '';
-  savedRadarrQualityProfileId = radarrResult.Data.QualityProfileId;
-  savedRadarrRootFolderPath = radarrResult.Data.RootFolderPath;
-  populateSelect('radarr-settings-quality-profile', savedRadarrQualityProfileId ? [{ Id: savedRadarrQualityProfileId, Name: `#${savedRadarrQualityProfileId}` }] : [], 'Id', 'Name', savedRadarrQualityProfileId);
-  populateSelect('radarr-settings-root-folder', savedRadarrRootFolderPath ? [{ Path: savedRadarrRootFolderPath }] : [], 'Path', 'Path', savedRadarrRootFolderPath);
-  if (savedRadarrQualityProfileId) {
-    const radarrProfileResult = await fetchJson('/RadarrSettings/quality-profile');
-    if (radarrProfileResult.Success)
-      populateSelect('radarr-settings-quality-profile', [radarrProfileResult.Data], 'Id', 'Name', savedRadarrQualityProfileId);
-    else
-      setStatus(`Showing Radarr profile #${savedRadarrQualityProfileId} - couldn't resolve its name: ${radarrProfileResult.Message}`, false);
-  }
+  await showSavedArrSelection('radarr', radarrResult.Data);
 }
 
 document.getElementById('scan-now').onclick = async () => {
@@ -731,7 +717,7 @@ document.getElementById('test-connection').onclick = async () => {
   const result = await fetchJson('/Settings/test-connection', { method: 'POST', body: JSON.stringify(settings) });
   setStatus(result.Success ? 'Connected.' : `Failed: ${result.Message}`, result.Success);
   if (result.Success)
-    await loadSonarrOptions(settings);
+    await loadArrOptions('sonarr', settings);
 };
 
 document.getElementById('radarr-test-connection').onclick = async () => {
@@ -742,7 +728,7 @@ document.getElementById('radarr-test-connection').onclick = async () => {
   const result = await fetchJson('/RadarrSettings/test-connection', { method: 'POST', body: JSON.stringify(settings) });
   setStatus(result.Success ? 'Radarr connected.' : `Radarr failed: ${result.Message}`, result.Success);
   if (result.Success)
-    await loadRadarrOptions(settings);
+    await loadArrOptions('radarr', settings);
 };
 
 document.getElementById('save-settings').onclick = async () => {

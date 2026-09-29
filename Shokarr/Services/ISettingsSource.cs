@@ -54,7 +54,7 @@ public class NativeSettingsSource(IConfigurationService configurationService, Sc
             }
             catch (Exception ex)
             {
-                s_logger.Warn(ex, "Shokarr: could not migrate legacy settings, continuing with native configuration as-is: {Error}", ex.Message.Replace("\r", "").Replace("\n", " "));
+                s_logger.Warn(ex, "Shokarr: could not migrate legacy settings, continuing with native configuration as-is: {Error}", ex.Message.ForLog());
             }
         });
     }
