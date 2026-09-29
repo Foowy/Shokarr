@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.1.0",
+      "tag": "v1.1.0",
+      "source_revision": "ed91d648599a1ea634b3130bcb8eab0cac1d5367",
+      "released_at": "2026-09-29T00:17:12Z",
+      "channel": "Stable",
+      "release_notes": "## Now called Shokarr\n\nShoko Arr is now **Shokarr**, a name that fits the *arr family better. Thanks to @revam for suggesting it.\n\n- **Upgrades in place.** Same plugin ID, and your settings carry over. Old GitHub URLs redirect.\n- **New URLs.** API routes moved from `/api/v1/ShokoArr/*` to `/api/v1/Shokarr/*`, and the dashboard from `/api/plugin/ShokoArr/dashboard` to `/api/plugin/Shokarr/dashboard`. The WebUI's plugin page link updates by itself.\n- **Data folder moves automatically.** On first start, `plugins/shoko_arr/` (or `plugins/shoko_sonarr/`) becomes `plugins/shokarr_data/`.\n- **Manual installs:** the plugin folder and DLL are now `Shokarr`; remove the old `ShokoArr` folder.\n\n\n\n## What's Changed\n* Match the README install steps to Shoko's plugin UI by @Foowy in https://github.com/Foowy/Shokarr/pull/78\n* Rename ShokoArr to Shokarr by @Foowy in https://github.com/Foowy/Shokarr/pull/79\n* chore: bump version to 1.1.0 by @Foowy in https://github.com/Foowy/Shokarr/pull/80\n\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.0.0...v1.1.0",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.1.0/Shokarr-v1.1.0_linux-arm64.zip",
+          "checksum": "dda92a02e88d4def45ede66c5821c49f27e3d850dfec30707d080b420d1c3194"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.1.0/Shokarr-v1.1.0_linux-x64.zip",
+          "checksum": "02dbb58da0ac9d1a2d292cddc7a119ca02e810a75e8d37e1e93bd5bf51ed585b"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.1.0/Shokarr-v1.1.0_win-x64.zip",
+          "checksum": "3408debb665fc2b96d985405ecef99f951a20b963b0b7ddfbf1a4eea096dab60"
+        }
+      ]
+    },
+    {
       "version": "1.0.0",
       "tag": "v1.0.0",
       "source_revision": "9b40b01060ff54ee8ac09073a2c93e9ac006d65d",
