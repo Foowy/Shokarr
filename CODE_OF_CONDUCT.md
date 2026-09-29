@@ -37,7 +37,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at the maintainer via a private report on the repository's [Security tab](https://github.com/Foowy/ShokoArr/security), or by contacting [@Foowy](https://github.com/Foowy) on GitHub. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at the maintainer via a private report on the repository's [Security tab](https://github.com/Foowy/Shokarr/security), or by contacting [@Foowy](https://github.com/Foowy) on GitHub. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
