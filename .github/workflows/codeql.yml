@@ -3,6 +3,8 @@ name: CodeQL
 on:
   push:
     branches: [master]
+    # The release workflow's manifest commit lands right after the bump merge and would cancel its run.
+    paths-ignore: [manifest.json]
   pull_request:
     branches: [master]
   schedule:
