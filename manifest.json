@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.2.0",
+      "tag": "v1.2.0",
+      "source_revision": "5f512a9f3b40d587af7052a13bb8897bedcc2732",
+      "released_at": "2026-09-30T23:34:22Z",
+      "channel": "Stable",
+      "release_notes": "## What's Changed\n* Skip CodeQL on manifest-only pushes to master by @Foowy in https://github.com/Foowy/Shokarr/pull/81\n* Deduplicate Sonarr and Radarr settings code by @Foowy in https://github.com/Foowy/Shokarr/pull/82\n* Bump Shoko.Abstractions to alpha.96 by @Foowy in https://github.com/Foowy/Shokarr/pull/83\n* chore: bump version to 1.2.0 by @Foowy in https://github.com/Foowy/Shokarr/pull/84\n\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.1.0...v1.2.0",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.2.0/Shokarr-v1.2.0_linux-arm64.zip",
+          "checksum": "e466d9721b8bf61e73fd5b7755f034bf009114878bc10aa5a1aef043c5b95725"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.2.0/Shokarr-v1.2.0_linux-x64.zip",
+          "checksum": "0bd24b09912160c07eaa3aea2ee52ac2052ef52ae584a2dc6a6611cf4b56c8b5"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.2.0/Shokarr-v1.2.0_win-x64.zip",
+          "checksum": "573ed00aca5c2a8610ff482e74835032e85f43e5af90323d4c571ad1e79199fb"
+        }
+      ]
+    },
+    {
       "version": "1.1.0",
       "tag": "v1.1.0",
       "source_revision": "ed91d648599a1ea634b3130bcb8eab0cac1d5367",
