@@ -58,7 +58,8 @@ public class ActionsTests : IDisposable
     private static Mock<IShokoSeries> MakeSeries(int id)
     {
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(id);
+        series.Setup(s => s.LocalID).Returns(id);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         return series;
     }
 

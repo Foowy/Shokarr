@@ -1,3 +1,4 @@
+using Shoko.Abstractions.Metadata;
 using Shoko.Abstractions.Metadata.Enums;
 using Shoko.Abstractions.Metadata.Services;
 using Shokarr.Models;
@@ -21,7 +22,7 @@ public class RelatedSeriesFinder(IMetadataService metadataService)
     public List<RelatedSeriesSuggestion> FindSuggestions()
     {
         var suggestions = new List<RelatedSeriesSuggestion>();
-        var seenRelatedIds = new HashSet<int>();
+        var seenRelatedIds = new HashSet<MetadataGuid>();
 
         foreach (var series in metadataService.GetAllShokoSeries())
         {
@@ -42,7 +43,7 @@ public class RelatedSeriesFinder(IMetadataService metadataService)
 
                 suggestions.Add(new RelatedSeriesSuggestion
                 {
-                    OwningShokoSeriesId = series.ID,
+                    OwningShokoSeriesId = series.LocalID,
                     OwningSeriesTitle = series.Title,
                     RelationType = relation.RelationType.ToString(),
                     RelatedTitle = related.Title,

@@ -77,7 +77,8 @@ public class ScanControllerTests : IDisposable
     private static Mock<IShokoSeries> MakeTargetSeries(params Mock<IShokoEpisode>[] episodes)
     {
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(2);
+        series.Setup(s => s.LocalID).Returns(2);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Title).Returns("Target");
         series.Setup(s => s.Episodes).Returns([.. episodes.Select(e => e.Object)]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });

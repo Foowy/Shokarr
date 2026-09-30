@@ -1,7 +1,9 @@
 using NLog;
+using Shoko.Abstractions.Metadata;
 using Shoko.Abstractions.Metadata.Enums;
 using Shoko.Abstractions.Metadata.Services;
 using Shoko.Abstractions.Metadata.Shoko;
+using Shoko.Abstractions.Metadata.Tmdb;
 using Shokarr.Models;
 
 namespace Shokarr.Services;
@@ -86,9 +88,9 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
             var candidates = MissingCandidates(series);
             var inScope = ScopedTo(candidates, series, settings);
             foreach (var e in candidates)
-                missingIgnoringScope.Add((series.ID, e.AnidbEpisodeID));
+                missingIgnoringScope.Add((series.LocalID, e.AnidbEpisodeID));
             foreach (var e in inScope)
-                stillMissingKeys.Add((series.ID, e.AnidbEpisodeID));
+                stillMissingKeys.Add((series.LocalID, e.AnidbEpisodeID));
 
             var result = BuildSeriesResult(series, inScope, settings, pendingByKey, today);
             if (result is not null)
@@ -119,14 +121,14 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
     /// <summary>Narrows candidates to the scanned types for a series, honoring the global specials setting and any per-series override.</summary>
     private IEnumerable<IShokoEpisode> ScopedTo(List<IShokoEpisode> candidates, IShokoSeries series, Config.SonarrSettings settings)
     {
-        var includeSpecials = cacheStore.GetSeriesOverride(series.ID)?.IncludeSpecials ?? settings.IncludeSpecials;
+        var includeSpecials = cacheStore.GetSeriesOverride(series.LocalID)?.IncludeSpecials ?? settings.IncludeSpecials;
         return includeSpecials ? candidates : candidates.Where(e => e.Type == EpisodeType.Episode);
     }
 
     /// <summary>Builds the missing-episode result for one series, or null if it has nothing missing after the specials scope and HideUnaired filters.</summary>
     private SeriesMissingResult? BuildSeriesResult(IShokoSeries series, IEnumerable<IShokoEpisode> inScope, Config.SonarrSettings settings, ILookup<(int, int), PendingSearch> pendingByKey, DateOnly today)
     {
-        var seriesOverride = cacheStore.GetSeriesOverride(series.ID);
+        var seriesOverride = cacheStore.GetSeriesOverride(series.LocalID);
         var overrideValue = seriesOverride?.IncludeSpecials;
 
         var missing = inScope
@@ -137,7 +139,7 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
                 IsSpecial = e.Type == EpisodeType.Special,
                 Title = e.Title,
                 AirDate = e.AirDate,
-                ActionStatus = pendingByKey.Contains((series.ID, e.AnidbEpisodeID)) ? "search-triggered" : "none",
+                ActionStatus = pendingByKey.Contains((series.LocalID, e.AnidbEpisodeID)) ? "search-triggered" : "none",
             })
             .ToList();
 
@@ -148,13 +150,13 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         if (displayMissing.Count == 0)
             return null;
 
-        var tvdbId = (series.TmdbShows ?? [])
+        var tvdbId = series.GetLinkedSeries<ITmdbShow>(MetadataSource.TMDB)
             .Select(s => s.TvdbShowID)
             .FirstOrDefault(id => id.HasValue);
 
         return new SeriesMissingResult
         {
-            ShokoSeriesId = series.ID,
+            ShokoSeriesId = series.LocalID,
             Title = series.Title,
             TvdbId = tvdbId,
             GroupTitle = series.ParentGroup?.Title,
