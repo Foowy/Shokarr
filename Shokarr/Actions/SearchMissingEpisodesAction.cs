@@ -68,5 +68,5 @@ public class SearchMissingEpisodesAction(SeriesMatcher matcher, SonarrSearchServ
     }
 
     private SeriesMissingResult? FindSeries() =>
-        cacheStore.GetLastScan()?.Series.Find(s => s.ShokoSeriesId == Series.ID);
+        cacheStore.GetLastScan()?.Series.Find(s => s.ShokoSeriesId == Series.LocalID);
 }

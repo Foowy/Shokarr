@@ -59,7 +59,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 1000, number: 4, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(42);
+        series.Setup(s => s.LocalID).Returns(42);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, missingEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -84,7 +85,8 @@ public class MissingEpisodeScannerTests : IDisposable
         group.Setup(g => g.Title).Returns("One Piece Franchise");
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(50);
+        series.Setup(s => s.LocalID).Returns(50);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([missingEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
         series.Setup(s => s.ParentGroup).Returns(group.Object);
@@ -105,7 +107,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var missingEp = MakeEpisode(anidbId: 5002, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 0);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(51);
+        series.Setup(s => s.LocalID).Returns(51);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([missingEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -125,7 +128,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var missingEp = MakeEpisode(anidbId: 6001, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 0);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(60);
+        series.Setup(s => s.LocalID).Returns(60);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([missingEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -148,7 +152,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var unownedEp = MakeEpisode(anidbId: 2001, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 0);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(99);
+        series.Setup(s => s.LocalID).Returns(99);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([unownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 0 });
 
@@ -168,7 +173,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 3000, number: 5, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(7);
+        series.Setup(s => s.LocalID).Returns(7);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, hiddenEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -188,7 +194,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 4000, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(8);
+        series.Setup(s => s.LocalID).Returns(8);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, creditsEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -208,7 +215,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 5000, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(10);
+        series.Setup(s => s.LocalID).Returns(10);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, specialEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -231,7 +239,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 6000, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(11);
+        series.Setup(s => s.LocalID).Returns(11);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, specialEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -252,7 +261,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 7000, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(12);
+        series.Setup(s => s.LocalID).Returns(12);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, specialEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -276,7 +286,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 8000, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(13);
+        series.Setup(s => s.LocalID).Returns(13);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, specialEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -297,7 +308,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9000, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1); // now has a file - no longer missing
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(20);
+        series.Setup(s => s.LocalID).Returns(20);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -332,7 +344,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9002, number: 2, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(21);
+        series.Setup(s => s.LocalID).Returns(21);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([stillMissingEp.Object, ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -359,7 +372,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9101, number: 2, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(30);
+        series.Setup(s => s.LocalID).Returns(30);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([futureEp.Object, ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -380,7 +394,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9103, number: 2, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(31);
+        series.Setup(s => s.LocalID).Returns(31);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([unknownDateEp.Object, ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -401,7 +416,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9105, number: 2, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(32);
+        series.Setup(s => s.LocalID).Returns(32);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([pastEp.Object, ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -424,7 +440,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var futureEp = MakeEpisode(anidbId: 9106, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 0, airDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)));
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(33);
+        series.Setup(s => s.LocalID).Returns(33);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([futureEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -450,7 +467,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var specialEp = MakeEpisode(anidbId: 9500, number: 1, type: EpisodeType.Special, hidden: false, videoCount: 0);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(23);
+        series.Setup(s => s.LocalID).Returns(23);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([specialEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -488,7 +506,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9004, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(24);
+        series.Setup(s => s.LocalID).Returns(24);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -510,7 +529,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9005, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(25);
+        series.Setup(s => s.LocalID).Returns(25);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -540,7 +560,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var ownedEp = MakeEpisode(anidbId: 9003, number: 1, type: EpisodeType.Episode, hidden: false, videoCount: 1);
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(22);
+        series.Setup(s => s.LocalID).Returns(22);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
 
@@ -579,7 +600,8 @@ public class MissingEpisodeScannerTests : IDisposable
         var maxObserved = 0;
 
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(80);
+        series.Setup(s => s.LocalID).Returns(80);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
         series.Setup(s => s.Episodes).Returns([]);
 
@@ -604,7 +626,8 @@ public class MissingEpisodeScannerTests : IDisposable
     {
         var missingEp = MakeEpisode(anidbId: 7101, number: 3, type: EpisodeType.Episode, hidden: false, videoCount: 0);
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(90);
+        series.Setup(s => s.LocalID).Returns(90);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Title).Returns("Solo Series");
         series.Setup(s => s.Episodes).Returns([missingEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
@@ -626,7 +649,8 @@ public class MissingEpisodeScannerTests : IDisposable
     public async Task ScanSeriesAsync_SeriesWithNothingMissing_ReturnsNull()
     {
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(91);
+        series.Setup(s => s.LocalID).Returns(91);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
         series.Setup(s => s.Episodes).Returns([]);
 
@@ -660,7 +684,8 @@ public class MissingEpisodeScannerTests : IDisposable
 
         var missingEp = MakeEpisode(anidbId: 7300, number: 2, type: EpisodeType.Episode, hidden: false, videoCount: 0);
         var target = new Mock<IShokoSeries>();
-        target.Setup(s => s.ID).Returns(2);
+        target.Setup(s => s.LocalID).Returns(2);
+        target.Setup(s => s.LinkedSeries).Returns([]);
         target.Setup(s => s.Title).Returns("Target");
         target.Setup(s => s.Episodes).Returns([missingEp.Object]);
         target.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
@@ -685,12 +710,14 @@ public class MissingEpisodeScannerTests : IDisposable
         var missingEp = MakeEpisode(anidbId: 1001, number: 5, type: EpisodeType.Episode, hidden: false, videoCount: 0);
         var ownedEp = MakeEpisode(anidbId: 1000, number: 4, type: EpisodeType.Episode, hidden: false, videoCount: 1);
         var tmdbShow = new Mock<Shoko.Abstractions.Metadata.Tmdb.ITmdbShow>();
+        tmdbShow.Setup(t => t.ID).Returns(MetadataGuid.Parse("tmdb://show/1"));
         tmdbShow.Setup(t => t.TvdbShowID).Returns(321);
         var series = new Mock<IShokoSeries>();
-        series.Setup(s => s.ID).Returns(42);
+        series.Setup(s => s.LocalID).Returns(42);
+        series.Setup(s => s.LinkedSeries).Returns([]);
         series.Setup(s => s.Episodes).Returns([ownedEp.Object, missingEp.Object]);
         series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
-        series.Setup(s => s.TmdbShows).Returns([tmdbShow.Object]);
+        series.Setup(s => s.LinkedSeries).Returns([tmdbShow.Object]);
         var metadataService = new Mock<IMetadataService>();
         metadataService.Setup(m => m.GetAllShokoSeries()).Returns([series.Object]);
         _settings.Sonarr = new Config.SonarrSettings { BaseUrl = "http://sonarr.local:8989", ApiKey = "key" };
