@@ -3,7 +3,6 @@ using Shoko.Abstractions.Metadata;
 using Shoko.Abstractions.Metadata.Enums;
 using Shoko.Abstractions.Metadata.Services;
 using Shoko.Abstractions.Metadata.Shoko;
-using Shoko.Abstractions.Metadata.Tmdb;
 using Shokarr.Models;
 
 namespace Shokarr.Services;
@@ -150,9 +149,11 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         if (displayMissing.Count == 0)
             return null;
 
-        var tvdbId = series.GetLinkedSeries<ITmdbShow>(MetadataSource.TMDB)
-            .Select(s => s.TvdbShowID)
-            .FirstOrDefault(id => id.HasValue);
+        var tvdbId = series.GetLinkedSeries(MetadataSource.TMDB)
+            .SelectMany(s => s.CrossSourceIDs)
+            .Where(id => id.Source.Value == "tvdb" && id.EntityType == MetadataEntityType.Series && id.TryGetNumericID<int>(out _))
+            .Select(id => (int?)id.GetNumericID<int>())
+            .FirstOrDefault();
 
         return new SeriesMissingResult
         {

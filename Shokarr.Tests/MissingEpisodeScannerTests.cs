@@ -709,9 +709,9 @@ public class MissingEpisodeScannerTests : IDisposable
     {
         var missingEp = MakeEpisode(anidbId: 1001, number: 5, type: EpisodeType.Episode, hidden: false, videoCount: 0);
         var ownedEp = MakeEpisode(anidbId: 1000, number: 4, type: EpisodeType.Episode, hidden: false, videoCount: 1);
-        var tmdbShow = new Mock<Shoko.Abstractions.Metadata.Tmdb.ITmdbShow>();
+        var tmdbShow = new Mock<ISeries>();
         tmdbShow.Setup(t => t.ID).Returns(MetadataGuid.Parse("tmdb://show/1"));
-        tmdbShow.Setup(t => t.TvdbShowID).Returns(321);
+        tmdbShow.Setup(t => t.CrossSourceIDs).Returns([MetadataGuid.Parse("tvdb://series/321")]);
         var series = new Mock<IShokoSeries>();
         series.Setup(s => s.LocalID).Returns(42);
         series.Setup(s => s.LinkedSeries).Returns([]);
@@ -735,6 +735,7 @@ public class MissingEpisodeScannerTests : IDisposable
         var scanner = new MissingEpisodeScanner(metadataService.Object, _cacheStore, sonarrClient, new NotificationService(new HttpClient()), _settings, new SonarrEpisodeStatusResolver(sonarrClient));
         var snapshot = await scanner.ScanAsync(TestContext.Current.CancellationToken);
 
+        Assert.Equal(321, snapshot.Series[0].TvdbId);
         Assert.Equal("downloaded", snapshot.Series[0].MissingEpisodes[0].SonarrState);
         Assert.Equal("downloaded", _cacheStore.GetLastScan()!.Series[0].MissingEpisodes[0].SonarrState);
     }
