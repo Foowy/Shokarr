@@ -22,7 +22,7 @@
     <PackageReference Include="Shoko.Abstractions" Version="6.0.0-alpha.98" ExcludeAssets="runtime" />
     <PackageReference Include="NLog" Version="6.2.0" ExcludeAssets="runtime" />
     <PackageReference Include="LiteDB" Version="5.0.21" />
-    <PackageReference Include="Shoko.BuildTools.Targets" Version="0.3.1" PrivateAssets="all" />
+    <PackageReference Include="Shoko.BuildTools.Targets" Version="0.3.2" PrivateAssets="all" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
