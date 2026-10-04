@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.2.1",
+      "tag": "v1.2.1",
+      "source_revision": "0c7e6f7c92e2f64713ddaf41435f128f40a3f4f5",
+      "released_at": "2026-10-04T07:04:12Z",
+      "channel": "Stable",
+      "release_notes": "Support Shoko.Abstractions 6.0.0-alpha.98 (TMDB types moved out of the abstractions; TVDB ID read from cross-source IDs).",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.2.1/Shokarr-v1.2.1_linux-arm64.zip",
+          "checksum": "7dfa45d3ec2cdc9778a32bae2888977c8a29cd1a6f26399afaaeffa784eddff3"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.2.1/Shokarr-v1.2.1_linux-x64.zip",
+          "checksum": "ba1c3d746ea61960aaac198a8c496f0bd4af67e97a07ac640cdce42c62186414"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.2.1/Shokarr-v1.2.1_win-x64.zip",
+          "checksum": "accb8d19f1ee0e507d62eaf67ce0e3561da7fe3a6b00398c0202f011b6af4aab"
+        }
+      ]
+    },
+    {
       "version": "1.2.0",
       "tag": "v1.2.0",
       "source_revision": "5f512a9f3b40d587af7052a13bb8897bedcc2732",
