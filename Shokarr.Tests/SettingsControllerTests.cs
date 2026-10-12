@@ -48,7 +48,7 @@ public class SettingsControllerTests
         var source = Stored();
         var controller = new SettingsController(source, null!);
 
-        controller.SaveSettings(new SonarrSettings { BaseUrl = "http://sonarr/", ScanIntervalHours = 12 });
+        controller.SaveSettings(new SonarrSettings { BaseUrl = "http://sonarr/", ScanIntervalHours = 12, NotificationWebhookUrl = ShokarrConstants.SecretMask });
 
         Assert.Equal("http://sonarr/", source.Sonarr.BaseUrl);
         Assert.Equal(12, source.Sonarr.ScanIntervalHours);
@@ -159,5 +159,16 @@ public class SettingsControllerTests
         Assert.False(source.Sonarr.CountSonarrHeldAsMissing);
         var ok = Assert.IsType<OkObjectResult>(controller.GetSettings());
         Assert.False(Assert.IsType<ShokarrBaseController.ApiResponse<SonarrSettings>>(ok.Value).Data!.CountSonarrHeldAsMissing);
+    }
+
+    [Fact]
+    public void SaveSettings_BlankWebhook_ClearsIt()
+    {
+        var source = Stored();
+        var controller = new SettingsController(source, null!);
+
+        controller.SaveSettings(new SonarrSettings { BaseUrl = "http://sonarr/", NotificationWebhookUrl = "" });
+
+        Assert.True(string.IsNullOrEmpty(source.Sonarr.NotificationWebhookUrl));
     }
 }

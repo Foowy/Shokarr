@@ -79,23 +79,32 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
         var candidates = (snapshot?.Series ?? []).Where(s => !string.IsNullOrEmpty(s.GroupTitle) && s.TvdbId.HasValue).ToList();
 
         int updated = 0, skipped = 0, failed = 0;
+        if (candidates.Count == 0)
+            return Ok(new ApiResponse<object>(Success: true, Message: null, Data: new TagSyncResult(updated, skipped, failed)));
+
+        var inSonarr = await sonarrClient.GetAllSeriesAsync(settings);
+        if (!inSonarr.Success)
+            return Ok(new ApiResponse<object>(Success: false, Message: inSonarr.ErrorMessage, Data: null));
+
+        var tagIds = new Dictionary<string, Models.ArrActionResult<int>>(StringComparer.OrdinalIgnoreCase);
         foreach (var series in candidates)
         {
-            var existing = await sonarrClient.GetExistingSeriesByTvdbIdAsync(settings, series.TvdbId!.Value);
-            if (!existing.Success || existing.Data!.Count == 0)
+            var existing = inSonarr.Data!.Find(s => s.TvdbId == series.TvdbId);
+            if (existing is null)
             {
                 skipped++;
                 continue;
             }
 
-            var tag = await sonarrClient.EnsureTagIdAsync(settings, series.GroupTitle!);
+            if (!tagIds.TryGetValue(series.GroupTitle!, out var tag))
+                tagIds[series.GroupTitle!] = tag = await sonarrClient.EnsureTagIdAsync(settings, series.GroupTitle!);
             if (!tag.Success)
             {
                 failed++;
                 continue;
             }
 
-            var update = await sonarrClient.UpdateSeriesTagAsync(settings, existing.Data[0].Id, tag.Data);
+            var update = await sonarrClient.UpdateSeriesTagAsync(settings, existing.Id, tag.Data);
             if (update.Success) updated++; else failed++;
         }
 

@@ -726,7 +726,7 @@ public class MissingEpisodeScannerTests : IDisposable
         {
             var path = r.RequestUri!.PathAndQuery;
             var body = path.StartsWith("/api/v3/queue") ? """{"records":[]}"""
-                : path.StartsWith("/api/v3/series") ? """[{"id":7}]"""
+                : path.StartsWith("/api/v3/series") ? """[{"id":7,"tvdbId":321}]"""
                 : """[{"id":55,"seasonNumber":1,"episodeNumber":5,"absoluteEpisodeNumber":5,"hasFile":true}]""";
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent(body) };
         });
@@ -738,5 +738,25 @@ public class MissingEpisodeScannerTests : IDisposable
         Assert.Equal(321, snapshot.Series[0].TvdbId);
         Assert.Equal("downloaded", snapshot.Series[0].MissingEpisodes[0].SonarrState);
         Assert.Equal("downloaded", _cacheStore.GetLastScan()!.Series[0].MissingEpisodes[0].SonarrState);
+    }
+
+    [Fact]
+    public async Task PatchSeriesAsync_WithoutPriorScan_DoesNotPersistPartialSnapshot()
+    {
+        var missingEp = MakeEpisode(anidbId: 7301, number: 2, type: EpisodeType.Episode, hidden: false, videoCount: 0);
+        var target = new Mock<IShokoSeries>();
+        target.Setup(s => s.LocalID).Returns(2);
+        target.Setup(s => s.LinkedSeries).Returns([]);
+        target.Setup(s => s.Title).Returns("Target");
+        target.Setup(s => s.Episodes).Returns([missingEp.Object]);
+        target.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = 1 });
+        var metadataService = new Mock<IMetadataService>();
+        metadataService.Setup(m => m.GetShokoSeriesByID(2)).Returns(target.Object);
+
+        var scanner = new MissingEpisodeScanner(metadataService.Object, _cacheStore, new SonarrClient(new HttpClient()), new NotificationService(new HttpClient()), _settings, new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient())));
+        var snapshot = await scanner.PatchSeriesAsync(2, TestContext.Current.CancellationToken);
+
+        Assert.Contains(snapshot.Series, s => s.ShokoSeriesId == 2);
+        Assert.Null(_cacheStore.GetLastScan());
     }
 }

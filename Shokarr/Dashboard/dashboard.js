@@ -445,7 +445,8 @@ async function loadSettings() {
   // (currentSettingsForm's apiKey: '') keeps hitting the backend's "preserve existing key" path.
   // The placeholder is just a visual "a key is saved" indicator, not the key itself.
   document.getElementById('settings-key').placeholder = result.Data.ApiKey ? 'Key saved (leave blank to keep)' : '';
-  document.getElementById('settings-webhook').placeholder = result.Data.NotificationWebhookUrl ? 'Webhook saved (leave blank to keep)' : '';
+  // The mask round-trips as "keep the stored webhook"; clearing the field removes it.
+  document.getElementById('settings-webhook').value = result.Data.NotificationWebhookUrl || '';
   document.getElementById('settings-interval').value = result.Data.ScanIntervalHours;
   document.getElementById('settings-include-specials').checked = result.Data.IncludeSpecials;
   document.getElementById('settings-hide-unaired').checked = result.Data.HideUnaired;
@@ -737,7 +738,11 @@ document.getElementById('save-settings').onclick = async () => {
     qualityProfileId: Number(document.getElementById('settings-quality-profile').value) || null,
     rootFolderPath: document.getElementById('settings-root-folder').value || null,
   };
-  await fetchJson('/Settings', { method: 'PUT', body: JSON.stringify(settings) });
+  const sonarrSaved = await fetchJson('/Settings', { method: 'PUT', body: JSON.stringify(settings) });
+  if (!sonarrSaved?.Success) {
+    setStatus(`Not saved: ${sonarrSaved?.Message || 'Sonarr settings were rejected.'}`, false);
+    return;
+  }
 
   const radarrSettings = {
     baseUrl: document.getElementById('radarr-settings-url').value,
@@ -745,7 +750,11 @@ document.getElementById('save-settings').onclick = async () => {
     qualityProfileId: Number(document.getElementById('radarr-settings-quality-profile').value) || null,
     rootFolderPath: document.getElementById('radarr-settings-root-folder').value || null,
   };
-  await fetchJson('/RadarrSettings', { method: 'PUT', body: JSON.stringify(radarrSettings) });
+  const radarrSaved = await fetchJson('/RadarrSettings', { method: 'PUT', body: JSON.stringify(radarrSettings) });
+  if (!radarrSaved?.Success) {
+    setStatus(`Sonarr saved, Radarr not saved: ${radarrSaved?.Message || 'Radarr settings were rejected.'}`, false);
+    return;
+  }
   document.getElementById('radarr-settings-key').value = '';
 
   setStatus('Saved.', true);

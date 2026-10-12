@@ -28,7 +28,7 @@ public record ArrRootFolderResource(
     [property: JsonPropertyName("path")] string Path);
 
 /// <summary>Minimal Sonarr series resource, used only to detect whether a series already exists.</summary>
-public record SonarrSeriesResource([property: JsonPropertyName("id")] int Id, [property: JsonPropertyName("titleSlug")] string? TitleSlug);
+public record SonarrSeriesResource([property: JsonPropertyName("id")] int Id, [property: JsonPropertyName("titleSlug")] string? TitleSlug, [property: JsonPropertyName("tvdbId")] int? TvdbId = null);
 
 /// <summary>Sonarr tag resource, as returned by Sonarr's v3 API.</summary>
 public record SonarrTagResource([property: JsonPropertyName("id")] int Id, [property: JsonPropertyName("label")] string Label);
@@ -74,6 +74,10 @@ public class SonarrClient(HttpClient httpClient) : ArrClientBase(httpClient)
     /// <summary>Looks up a series already added to Sonarr by TVDB ID (as opposed to <see cref="LookupByTvdbIdAsync"/>, which searches TheTVDB regardless of whether it's already added).</summary>
     public Task<ArrActionResult<List<SonarrSeriesResource>>> GetExistingSeriesByTvdbIdAsync(SonarrSettings settings, int tvdbId, CancellationToken ct = default) =>
         SendAsync<List<SonarrSeriesResource>>(BuildRequest(HttpMethod.Get, settings, $"/api/v3/series?tvdbId={tvdbId}"), ct);
+
+    /// <summary>Gets every series already added to Sonarr, for callers that would otherwise look them up one TVDB ID at a time.</summary>
+    public Task<ArrActionResult<List<SonarrSeriesResource>>> GetAllSeriesAsync(SonarrSettings settings, CancellationToken ct = default) =>
+        SendAsync<List<SonarrSeriesResource>>(BuildRequest(HttpMethod.Get, settings, "/api/v3/series"), ct);
 
     /// <summary>Gets all of Sonarr's configured tags.</summary>
     public Task<ArrActionResult<List<SonarrTagResource>>> GetTagsAsync(SonarrSettings settings, CancellationToken ct = default) =>

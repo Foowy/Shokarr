@@ -13,6 +13,9 @@ updates:
       # bundled version exactly (currently 10.2.1) or the plugin fails to load. Bump
       # by hand against the host's /usr/src/app/build/Shoko.Server.deps.json.
       - dependency-name: "Asp.Versioning.*"
+      # Compile-only ref that must match the host's bundled version, or the plugin fails to load.
+      # Bump by hand when the host moves; CI only compiles, so an auto-merged bump would pass.
+      - dependency-name: "Shoko.Abstractions"
       # Also compile-only; keep at the host's bundled version (currently 6.2.0).
       - dependency-name: "NLog"
       # Track ShokoServer's test stack; xunit v4 breaks dotnet test there.
