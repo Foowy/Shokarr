@@ -86,6 +86,20 @@ public class ScanControllerTests : IDisposable
     }
 
     [Fact]
+    public void GetResults_MarksEpisodesWithAPendingSearchAsSearchTriggered()
+    {
+        SeedTwoSeriesSnapshot();
+        _cacheStore.AddPendingSearch(new PendingSearch { ShokoSeriesId = 2, AnidbEpisodeId = 22, SonarrSeriesId = 9, SonarrEpisodeId = 1, TriggeredAtUtc = DateTime.UtcNow });
+
+        var snapshot = SnapshotOf(MakeController(new Mock<IMetadataService>(), _cacheStore).GetResults());
+
+        var target = Assert.Single(snapshot.Series, s => s.ShokoSeriesId == 2);
+        Assert.Equal("search-triggered", target.MissingEpisodes.Single(e => e.AnidbEpisodeId == 22).ActionStatus);
+        Assert.NotEqual("search-triggered", target.MissingEpisodes.Single(e => e.AnidbEpisodeId == 21).ActionStatus);
+        Assert.All(snapshot.Series.Single(s => s.ShokoSeriesId == 1).MissingEpisodes, e => Assert.NotEqual("search-triggered", e.ActionStatus));
+    }
+
+    [Fact]
     public async Task SetSeriesSpecials_ExcludingSpecials_DropsSeriesFromSnapshotWithoutFullScan()
     {
         SeedTwoSeriesSnapshot();
