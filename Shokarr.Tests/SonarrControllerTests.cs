@@ -246,4 +246,36 @@ public class SonarrControllerTests : IDisposable
         Assert.Equal(2, data.Updated);
         Assert.Equal(1, tagRequests);
     }
+
+    [Fact]
+    public async Task SyncTags_FailedTagLookup_IsNotCachedForTheGroup()
+    {
+        _cacheStore.SaveScan(new ScanSnapshot
+        {
+            Series =
+            [
+                new SeriesMissingResult { ShokoSeriesId = 1, Title = "A", TvdbId = 10, GroupTitle = "Group" },
+                new SeriesMissingResult { ShokoSeriesId = 2, Title = "B", TvdbId = 11, GroupTitle = "Group" },
+            ],
+        });
+        var tagRequests = 0;
+        var controller = MakeController(r =>
+        {
+            var path = r.RequestUri!.PathAndQuery;
+            if (path.StartsWith("/api/v3/tag"))
+                return ++tagRequests == 1
+                    ? new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                    : JsonResponse(HttpStatusCode.OK, new[] { new { id = 5, label = "Group" } });
+            if (path == "/api/v3/series")
+                return JsonResponse(HttpStatusCode.OK, new[] { new { id = 1, tvdbId = 10 }, new { id = 2, tvdbId = 11 } });
+            return JsonResponse(HttpStatusCode.OK, new { id = 1, tags = Array.Empty<int>() });
+        }, _cacheStore);
+
+        var result = await controller.SyncTags();
+
+        var data = Assert.IsType<TagSyncResult>(Assert.IsType<ShokarrBaseController.ApiResponse<object>>(Assert.IsType<OkObjectResult>(result).Value).Data);
+        Assert.Equal(1, data.Failed);
+        Assert.Equal(1, data.Updated);
+        Assert.Equal(2, tagRequests);
+    }
 }

@@ -21,14 +21,20 @@ public class SonarrEpisodeStatusResolver(SonarrClient sonarrClient)
         private volatile bool _unreachable = string.IsNullOrWhiteSpace(settings.BaseUrl);
         private readonly Lazy<Task<ArrActionResult<HashSet<int>>>> _queue = new(() => sonarrClient.GetQueuedEpisodeIdsAsync(settings, ct));
 
-        private readonly Lazy<Task<ArrActionResult<List<SonarrSeriesResource>>>> _allSeries = new(() => sonarrClient.GetAllSeriesAsync(settings, ct));
+        private readonly Lazy<Task<ArrActionResult<Dictionary<int, SonarrSeriesResource>>>> _allSeries = new(() => LoadByTvdbIdAsync(sonarrClient, settings, ct));
+
+        private static async Task<ArrActionResult<Dictionary<int, SonarrSeriesResource>>> LoadByTvdbIdAsync(SonarrClient client, SonarrSettings settings, CancellationToken ct)
+        {
+            var all = await client.GetAllSeriesAsync(settings, ct).ConfigureAwait(false);
+            return all.Success ? ArrActionResult<Dictionary<int, SonarrSeriesResource>>.Ok(all.Data!.ToTvdbLookup()) : ArrActionResult<Dictionary<int, SonarrSeriesResource>>.Fail(all.ErrorMessage!);
+        }
 
         private async Task<ArrActionResult<SonarrSeriesResource?>> FindSeriesAsync(int tvdbId)
         {
             if (bulk)
             {
                 var all = await _allSeries.Value.ConfigureAwait(false);
-                return all.Success ? ArrActionResult<SonarrSeriesResource?>.Ok(all.Data!.Find(s => s.TvdbId == tvdbId)) : ArrActionResult<SonarrSeriesResource?>.Fail(all.ErrorMessage!);
+                return all.Success ? ArrActionResult<SonarrSeriesResource?>.Ok(all.Data!.GetValueOrDefault(tvdbId)) : ArrActionResult<SonarrSeriesResource?>.Fail(all.ErrorMessage!);
             }
 
             var existing = await sonarrClient.GetExistingSeriesByTvdbIdAsync(settings, tvdbId, ct).ConfigureAwait(false);

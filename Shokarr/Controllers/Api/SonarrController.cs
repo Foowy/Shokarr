@@ -86,25 +86,30 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
         if (!inSonarr.Success)
             return Ok(new ApiResponse<object>(Success: false, Message: inSonarr.ErrorMessage, Data: null));
 
-        var tagIds = new Dictionary<string, Models.ArrActionResult<int>>(StringComparer.OrdinalIgnoreCase);
+        var bySonarrTvdbId = inSonarr.Data!.ToTvdbLookup();
+        var tagIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var series in candidates)
         {
-            var existing = inSonarr.Data!.Find(s => s.TvdbId == series.TvdbId);
-            if (existing is null)
+            if (!bySonarrTvdbId.TryGetValue(series.TvdbId!.Value, out var existing))
             {
                 skipped++;
                 continue;
             }
 
-            if (!tagIds.TryGetValue(series.GroupTitle!, out var tag))
-                tagIds[series.GroupTitle!] = tag = await sonarrClient.EnsureTagIdAsync(settings, series.GroupTitle!);
-            if (!tag.Success)
+            // Only successful lookups are cached, so one transient failure doesn't fail every other series in the group.
+            if (!tagIds.TryGetValue(series.GroupTitle!, out var tagId))
             {
-                failed++;
-                continue;
+                var tag = await sonarrClient.EnsureTagIdAsync(settings, series.GroupTitle!);
+                if (!tag.Success)
+                {
+                    failed++;
+                    continue;
+                }
+
+                tagIds[series.GroupTitle!] = tagId = tag.Data;
             }
 
-            var update = await sonarrClient.UpdateSeriesTagAsync(settings, existing.Id, tag.Data);
+            var update = await sonarrClient.UpdateSeriesTagAsync(settings, existing.Id, tagId);
             if (update.Success) updated++; else failed++;
         }
 
