@@ -28,7 +28,7 @@ public class ScanController(MissingEpisodeScanner scanner, ScanCacheStore cacheS
     /// <summary>Sets (or clears) a series' specials override, then recomputes just that series in the cached snapshot.</summary>
     /// <param name="shokoSeriesId">The Shoko series ID.</param>
     /// <param name="request">The override to set.</param>
-    /// <returns>The patched scan snapshot.</returns>
+    /// <returns>The patched scan snapshot, or 204 if no full scan has run yet.</returns>
     [HttpPut("series/{shokoSeriesId:int}/include-specials")]
     public async Task<IActionResult> SetSeriesSpecials(int shokoSeriesId, [FromBody] SetSeriesSpecialsRequest request)
     {
@@ -37,13 +37,13 @@ public class ScanController(MissingEpisodeScanner scanner, ScanCacheStore cacheS
 
         cacheStore.SetSeriesOverride(shokoSeriesId, request.IncludeSpecials);
         var snapshot = await scanner.PatchSeriesAsync(shokoSeriesId, HttpContext.RequestAborted);
-        return Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
+        return snapshot is null ? NoContent() : Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
     }
 
     /// <summary>Sets (or clears) a series' Sonarr quality-profile/root-folder override, then recomputes just that series in the cached snapshot.</summary>
     /// <param name="shokoSeriesId">The Shoko series ID.</param>
     /// <param name="request">The override to set.</param>
-    /// <returns>The patched scan snapshot.</returns>
+    /// <returns>The patched scan snapshot, or 204 if no full scan has run yet.</returns>
     [HttpPut("series/{shokoSeriesId:int}/sonarr-override")]
     public async Task<IActionResult> SetSeriesSonarrOverride(int shokoSeriesId, [FromBody] SetSeriesSonarrOverrideRequest request)
     {
@@ -52,7 +52,7 @@ public class ScanController(MissingEpisodeScanner scanner, ScanCacheStore cacheS
 
         cacheStore.SetSeriesSonarrOverride(shokoSeriesId, request.QualityProfileId, request.RootFolderPath);
         var snapshot = await scanner.PatchSeriesAsync(shokoSeriesId, HttpContext.RequestAborted);
-        return Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
+        return snapshot is null ? NoContent() : Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
     }
 
     /// <summary>Gets the most recently computed scan snapshot.</summary>

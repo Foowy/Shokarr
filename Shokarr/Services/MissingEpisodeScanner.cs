@@ -35,26 +35,27 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         }
     }
 
-    /// <summary>Recomputes one series and splices it into the persisted snapshot, under the same lock as <see cref="ScanAsync"/>. Does not reconcile.</summary>
-    public async Task<ScanSnapshot> PatchSeriesAsync(int shokoSeriesId, CancellationToken ct = default)
+    /// <summary>Recomputes one series and splices it into the persisted snapshot, under the same lock as <see cref="ScanAsync"/>. Does not reconcile. Returns null when no full scan has run yet, since a one-series snapshot would be mistaken for a completed scan.</summary>
+    public async Task<ScanSnapshot?> PatchSeriesAsync(int shokoSeriesId, CancellationToken ct = default)
     {
         var updated = await ScanSeriesAsync(shokoSeriesId, ct).ConfigureAwait(false);
         await _scanLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             var previous = cacheStore.GetLastScan();
-            var series = (previous?.Series ?? []).Where(s => s.ShokoSeriesId != shokoSeriesId).ToList();
+            if (previous is null)
+                return null;
+
+            var series = previous.Series.Where(s => s.ShokoSeriesId != shokoSeriesId).ToList();
             if (updated is not null)
                 series.Add(updated);
 
             var snapshot = new ScanSnapshot
             {
-                ScannedAtUtc = previous?.ScannedAtUtc ?? DateTime.MinValue,
+                ScannedAtUtc = previous.ScannedAtUtc,
                 Series = [.. series.OrderByDescending(s => s.MissingEpisodes.Count)],
             };
-            // A patch without a prior full scan would persist a one-series list that the scheduler reads as a completed scan.
-            if (previous is not null)
-                cacheStore.SaveScan(snapshot);
+            cacheStore.SaveScan(snapshot);
             return snapshot;
         }
         finally
