@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.0",
+      "tag": "v1.3.0",
+      "source_revision": "a16f779a7aeb848740e7b8a5c7f99ba53877c11a",
+      "released_at": "2026-10-12T07:06:36Z",
+      "channel": "Stable",
+      "release_notes": "This release supports Shoko.Abstractions 6.0.0-alpha.103 and fixes a batch of issues found in a full code review. Scheduled scans now run on time on hosts that are not on UTC, and the dashboard reports a rejected settings save instead of claiming it worked.\n\n**Changes:**\n- Bump Shoko.Abstractions to v6.0.0-alpha.103\n- Fix the scan interval and pending-search expiry running early or late by the host's UTC offset\n- Show the server's error in the dashboard when a Sonarr or Radarr settings save is rejected, instead of always reporting \"Saved.\"\n- Allow clearing the notification webhook by saving a blank value\n- Stop a per-series override made before the first full scan from being stored as a completed scan\n- Report an unreachable Sonarr as a connection error in the Search Missing Episodes action and in Sync Tags\n- Optimize scans and Sync Tags by fetching Sonarr's series list once, and each group tag once, instead of once per series\n- Migrate the \"count Sonarr-held episodes as missing\" setting from legacy settings\n- Ignore Shoko.Abstractions in Dependabot so host-version bumps stay manual\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.2.1...v1.3.0",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.0/Shokarr-v1.3.0_linux-arm64.zip",
+          "checksum": "f4aa2d1a369aa9d685e08dc1cc8b5a006132f62ab0f4fc94a226d6aff1305b91"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.0/Shokarr-v1.3.0_linux-x64.zip",
+          "checksum": "fc6f696bf960317331eb4b4e5cbcc6020e1a7e1f30954a0c9a3f4f40cd0b70b4"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.0/Shokarr-v1.3.0_win-x64.zip",
+          "checksum": "02f52f7d4f983aedd1eb0f0d1290e68425ef6663e986df3b86c621b029210fe2"
+        }
+      ]
+    },
+    {
       "version": "1.2.1",
       "tag": "v1.2.1",
       "source_revision": "0c7e6f7c92e2f64713ddaf41435f128f40a3f4f5",
