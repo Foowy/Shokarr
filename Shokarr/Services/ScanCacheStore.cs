@@ -90,15 +90,29 @@ public class ScanCacheStore : IDisposable
             o.RootFolderPath = rootFolderPath;
         });
 
+    /// <summary>Remembers the TVDB ID the user confirmed for a series, preserving any other override already set.</summary>
+    public void SetSeriesTvdbId(int shokoSeriesId, int tvdbId) =>
+        UpsertSeriesOverride(shokoSeriesId, o => o.TvdbId = tvdbId);
+
     /// <summary>Applies <paramref name="mutate"/> to the existing override row and replaces it, deleting the row if no fields remain set. Read-mutate-write so setting one field never wipes another.</summary>
     private void UpsertSeriesOverride(int shokoSeriesId, Action<SeriesOverride> mutate)
     {
         var col = _db.GetCollection<SeriesOverride>(SeriesOverridesCollectionName);
-        var existing = col.Find(o => o.ShokoSeriesId == shokoSeriesId).FirstOrDefault() ?? new SeriesOverride { ShokoSeriesId = shokoSeriesId };
-        mutate(existing);
-        col.DeleteMany(o => o.ShokoSeriesId == shokoSeriesId);
-        if (existing.IncludeSpecials is not null || existing.QualityProfileId is not null || !string.IsNullOrEmpty(existing.RootFolderPath))
-            col.Insert(existing);
+        _db.BeginTrans();
+        try
+        {
+            var existing = col.Find(o => o.ShokoSeriesId == shokoSeriesId).FirstOrDefault() ?? new SeriesOverride { ShokoSeriesId = shokoSeriesId };
+            mutate(existing);
+            col.DeleteMany(o => o.ShokoSeriesId == shokoSeriesId);
+            if (existing.IncludeSpecials is not null || existing.TvdbId is not null || existing.QualityProfileId is not null || !string.IsNullOrEmpty(existing.RootFolderPath))
+                col.Insert(existing);
+            _db.Commit();
+        }
+        catch
+        {
+            _db.Rollback();
+            throw;
+        }
     }
 
     /// <summary>Gets the most recent scan snapshot, or null if no scan has run yet.</summary>
@@ -145,6 +159,16 @@ public class ScanCacheStore : IDisposable
         return entries;
     }
 
+    /// <summary>Gets the current pending entry for an episode, or null if it was reconciled or cancelled.</summary>
+    public PendingSearch? GetPendingSearch(int shokoSeriesId, int anidbEpisodeId)
+    {
+        var col = _db.GetCollection<PendingSearch>(PendingSearchesCollectionName);
+        var entry = col.Find(p => p.ShokoSeriesId == shokoSeriesId && p.AnidbEpisodeId == anidbEpisodeId).FirstOrDefault();
+        if (entry is not null)
+            entry.TriggeredAtUtc = entry.TriggeredAtUtc.ToUniversalTime();
+        return entry;
+    }
+
     /// <summary>Bumps the failed-reconciliation count and stores the latest error on an existing pending entry.</summary>
     public void RecordPendingFailure(PendingSearch entry, string error)
     {
@@ -166,8 +190,12 @@ public class ScanCacheStore : IDisposable
     /// <summary>Appends one or more search-history entries, trimming the oldest down to <see cref="MaxHistoryEntries"/> once after the whole batch is inserted, not once per entry.</summary>
     public void AddHistoryEntries(IEnumerable<SearchHistoryEntry> entries)
     {
+        var batch = entries.ToList();
+        if (batch.Count == 0)
+            return;
+
         var col = _db.GetCollection<SearchHistoryEntry>(SearchHistoryCollectionName);
-        col.InsertBulk(entries);
+        col.InsertBulk(batch);
 
         // Ids auto-increment and only the oldest are ever deleted, so the ids are contiguous and a cutoff on id keeps exactly the newest MaxHistoryEntries.
         var cutoffId = col.Max().AsInt32 - MaxHistoryEntries;

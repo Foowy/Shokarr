@@ -381,4 +381,12 @@ public class ScanCacheStoreTests : IDisposable
         // A new DateTime property must also be converted with ToUniversalTime where ScanCacheStore reads it back.
         Assert.Equal(["PendingSearch.TriggeredAtUtc", "ScanSnapshot.ScannedAtUtc", "SearchHistoryEntry.TimestampUtc"], dateTimeProperties);
     }
+
+    [Fact]
+    public void AddHistoryEntries_Empty_DoesNothing()
+    {
+        _store.AddHistoryEntries([]);
+
+        Assert.Empty(_store.GetHistory());
+    }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Shoko.Abstractions.Metadata.Services;
+using Shokarr.Models;
 using Shokarr.Services;
 
 namespace Shokarr.Controllers.Api;
@@ -36,7 +37,7 @@ public class ScanController(MissingEpisodeScanner scanner, ScanCacheStore cacheS
             return NotFound(new ApiResponse<object>(Success: false, Message: $"No Shoko series with ID {shokoSeriesId}.", Data: null));
 
         cacheStore.SetSeriesOverride(shokoSeriesId, request.IncludeSpecials);
-        var snapshot = await scanner.PatchSeriesAsync(shokoSeriesId, HttpContext.RequestAborted);
+        var snapshot = WithPendingStatus(await scanner.PatchSeriesAsync(shokoSeriesId, HttpContext.RequestAborted));
         return snapshot is null ? NoContent() : Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
     }
 
@@ -51,8 +52,21 @@ public class ScanController(MissingEpisodeScanner scanner, ScanCacheStore cacheS
             return NotFound(new ApiResponse<object>(Success: false, Message: $"No Shoko series with ID {shokoSeriesId}.", Data: null));
 
         cacheStore.SetSeriesSonarrOverride(shokoSeriesId, request.QualityProfileId, request.RootFolderPath);
-        var snapshot = await scanner.PatchSeriesAsync(shokoSeriesId, HttpContext.RequestAborted);
+        var snapshot = WithPendingStatus(await scanner.PatchSeriesAsync(shokoSeriesId, HttpContext.RequestAborted));
         return snapshot is null ? NoContent() : Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
+    }
+
+    /// <summary>A stored snapshot only knows about searches that existed when it was built; mark the episodes with a pending search now so a search triggered since the scan shows as such.</summary>
+    private ScanSnapshot? WithPendingStatus(ScanSnapshot? snapshot)
+    {
+        if (snapshot is null)
+            return null;
+
+        var pending = cacheStore.GetPendingSearches().Select(p => (p.ShokoSeriesId, p.AnidbEpisodeId)).ToHashSet();
+        foreach (var series in snapshot.Series)
+            foreach (var episode in series.MissingEpisodes.Where(e => pending.Contains((series.ShokoSeriesId, e.AnidbEpisodeId))))
+                episode.ActionStatus = "search-triggered";
+        return snapshot;
     }
 
     /// <summary>Gets the most recently computed scan snapshot.</summary>
@@ -60,7 +74,7 @@ public class ScanController(MissingEpisodeScanner scanner, ScanCacheStore cacheS
     [HttpGet("results")]
     public IActionResult GetResults()
     {
-        var snapshot = cacheStore.GetLastScan();
+        var snapshot = WithPendingStatus(cacheStore.GetLastScan());
         return snapshot is null ? NoContent() : Ok(new ApiResponse<object>(Success: true, Message: null, Data: snapshot));
     }
 

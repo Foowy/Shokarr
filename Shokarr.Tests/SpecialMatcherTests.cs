@@ -57,4 +57,44 @@ public class SpecialMatcherTests
 
         Assert.Null(SpecialMatcher.Match(episodes, Special(1, "OVA 1", new DateOnly(2020, 1, 1))));
     }
+
+    [Fact]
+    public void Match_IgnoresMacronsOnLatinLetters()
+    {
+        var episodes = new List<SonarrEpisodeResource> { Ep(1, 1, "Okami Special", null), Ep(2, 2, "Unrelated Extra", null) };
+
+        Assert.Equal(1, SpecialMatcher.Match(episodes, Special(9, "\u014Ckami Special", null))?.Id);
+    }
+
+    [Fact]
+    public void Match_NonLatinTitles_AreComparedByTheirCharacters()
+    {
+        var episodes = new List<SonarrEpisodeResource> { Ep(1, 1, "\u30AD\u30E3\u30F3\u30D7\u98EF", null), Ep(2, 2, "Other", null) };
+
+        Assert.Equal(1, SpecialMatcher.Match(episodes, Special(9, "\u30AD\u30E3\u30F3\u30D7\u98EF", null))?.Id);
+    }
+
+    [Fact]
+    public void Match_KanaVoicingMarksStillDistinguishTitles()
+    {
+        var episodes = new List<SonarrEpisodeResource> { Ep(1, 1, "\u304B", null) };
+
+        Assert.Null(SpecialMatcher.Match(episodes, Special(9, "\u304C", null)));
+    }
+
+    [Fact]
+    public void Match_ParsesIsoAirDatesRegardlessOfHostCulture()
+    {
+        var episodes = new List<SonarrEpisodeResource> { Ep(1, 5, "Alpha gamma", "2024-03-05") };
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("th-TH");
+            Assert.Equal(1, SpecialMatcher.Match(episodes, Special(9, "Alpha beta", new DateOnly(2024, 3, 5)))?.Id);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+    }
 }

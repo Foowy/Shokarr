@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Shoko.Abstractions.Metadata.Services;
 using Shokarr.Services;
 
 namespace Shokarr.Controllers.Api;
@@ -22,7 +23,7 @@ public record AddDiscoveryRequest(int TvdbId, string Title);
 public record TagSyncResult(int Updated, int SkippedNoMatch, int Failed);
 
 /// <summary>Endpoints for matching Shoko series to Sonarr and triggering add/monitor/search actions.</summary>
-public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchService, SonarrClient sonarrClient, ScanCacheStore cacheStore, NotificationService notificationService, ISettingsSource settingsSource) : ShokarrBaseController
+public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchService, SonarrClient sonarrClient, ScanCacheStore cacheStore, NotificationService notificationService, ISettingsSource settingsSource, IMetadataService metadataService) : ShokarrBaseController
 {
     /// <summary>Resolves a Sonarr match for the given Shoko series from the cached scan snapshot.</summary>
     /// <param name="shokoSeriesId">The Shoko series ID.</param>
@@ -69,14 +70,17 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
         return Ok(new ApiResponse<object>(Success: true, Message: null, Data: null));
     }
 
-    /// <summary>Retroactively tags owned series already present in Sonarr with their Shoko group's title, for series added before tag propagation existed. Series not yet in Sonarr are skipped - they get tagged automatically at add time.</summary>
+    /// <summary>Retroactively tags every owned series already present in Sonarr with their Shoko group's title, for series added before tag propagation existed. Series not yet in Sonarr are skipped - they get tagged automatically at add time.</summary>
     /// <returns>200 with a summary of updated/skipped/failed counts.</returns>
     [HttpPost("sync-tags")]
     public async Task<IActionResult> SyncTags()
     {
-        var snapshot = cacheStore.GetLastScan();
         var settings = settingsSource.GetSonarr();
-        var candidates = (snapshot?.Series ?? []).Where(s => !string.IsNullOrEmpty(s.GroupTitle) && s.TvdbId.HasValue).ToList();
+        // Every owned series, not the last scan's snapshot, which only holds series with something missing.
+        var candidates = metadataService.GetAllShokoSeries()
+            .Select(s => (GroupTitle: s.ParentGroup?.Title, TvdbId: MissingEpisodeScanner.ResolveTvdbId(s, cacheStore.GetSeriesOverride(s.LocalID))))
+            .Where(s => !string.IsNullOrEmpty(s.GroupTitle) && s.TvdbId.HasValue)
+            .ToList();
 
         int updated = 0, skipped = 0, failed = 0;
         if (candidates.Count == 0)
@@ -151,7 +155,10 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
         // Lookup returns candidates regardless of whether already added, so check existence first - this single action must work whether the series is new or not.
         var existing = await sonarrClient.GetExistingSeriesByTvdbIdAsync(settings, request.TvdbId);
         if (existing.Success && existing.Data!.Count > 0)
+        {
+            RememberConfirmedMatch(series, request.TvdbId);
             return await MonitorAndSearchAsync(settings, request.ShokoSeriesId, existing.Data[0].Id, existing.Data[0].TitleSlug, request.AnidbEpisodeIds, series);
+        }
 
         List<int>? tagIds = null;
         if (!string.IsNullOrEmpty(series.GroupTitle))
@@ -165,13 +172,23 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
         if (!added.Success)
             return Conflict(new ApiResponse<object>(Success: false, Message: added.ErrorMessage, Data: null));
 
-        return await MonitorAndSearchAsync(settings, request.ShokoSeriesId, added.Data!.Id, added.Data.TitleSlug, request.AnidbEpisodeIds, series);
+        RememberConfirmedMatch(series, request.TvdbId);
+
+        // Sonarr only queues a refresh when a series is added, so its episode list is empty for the first few seconds.
+        return await MonitorAndSearchAsync(settings, request.ShokoSeriesId, added.Data!.Id, added.Data.TitleSlug, request.AnidbEpisodeIds, series, episodeLookupAttempts: 15);
+    }
+
+    /// <summary>Stores a TVDB ID the user confirmed from a title search, so the series auto-resolves from the next scan on instead of asking again.</summary>
+    private void RememberConfirmedMatch(Models.SeriesMissingResult series, int tvdbId)
+    {
+        if (series.TvdbId != tvdbId)
+            cacheStore.SetSeriesTvdbId(series.ShokoSeriesId, tvdbId);
     }
 
     /// <summary>Monitors and searches for the given missing episodes on a Sonarr series, via <see cref="SonarrSearchService.MonitorAndSearchAsync"/>.</summary>
-    private async Task<IActionResult> MonitorAndSearchAsync(Config.SonarrSettings settings, int shokoSeriesId, int sonarrSeriesId, string? sonarrTitleSlug, List<int> anidbEpisodeIds, Models.SeriesMissingResult series)
+    private async Task<IActionResult> MonitorAndSearchAsync(Config.SonarrSettings settings, int shokoSeriesId, int sonarrSeriesId, string? sonarrTitleSlug, List<int> anidbEpisodeIds, Models.SeriesMissingResult series, int episodeLookupAttempts = 1)
     {
-        var result = await searchService.MonitorAndSearchAsync(settings, shokoSeriesId, sonarrSeriesId, anidbEpisodeIds, series, sonarrTitleSlug);
+        var result = await searchService.MonitorAndSearchAsync(settings, shokoSeriesId, sonarrSeriesId, anidbEpisodeIds, series, sonarrTitleSlug, episodeLookupAttempts, TimeSpan.FromSeconds(2), HttpContext.RequestAborted);
         if (!result.Success)
             return Conflict(new ApiResponse<object>(Success: false, Message: result.ErrorMessage, Data: null));
 

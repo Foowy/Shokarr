@@ -537,7 +537,7 @@ public class MissingEpisodeScannerTests : IDisposable
         var metadataService = new Mock<IMetadataService>();
         metadataService.Setup(m => m.GetAllShokoSeries()).Returns([series.Object]);
         _settings.Sonarr = new Config.SonarrSettings { BaseUrl = "http://sonarr.local:8989", ApiKey = "key" };
-        _cacheStore.AddPendingSearch(new PendingSearch { ShokoSeriesId = 25, SeriesTitle = "Expiring Series", AnidbEpisodeId = 9005, EpisodeTitle = "Episode 1", SonarrSeriesId = 55, SonarrEpisodeId = 782, TriggeredAtUtc = DateTime.UtcNow.AddDays(-15) });
+        _cacheStore.AddPendingSearch(new PendingSearch { ShokoSeriesId = 25, SeriesTitle = "Expiring Series", AnidbEpisodeId = 9005, EpisodeTitle = "Episode 1", SonarrSeriesId = 55, SonarrEpisodeId = 782, TriggeredAtUtc = DateTime.UtcNow.AddDays(-15), FailedReconciliations = 2 });
 
         var handler = new FakeHandler(_ => new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError) { Content = new StringContent("boom") });
         var sonarrClient = new SonarrClient(new HttpClient(handler));
@@ -769,5 +769,102 @@ public class MissingEpisodeScannerTests : IDisposable
         Assert.Null(await scanner.PatchSeriesAsync(2, TestContext.Current.CancellationToken));
 
         metadataService.Verify(m => m.GetShokoSeriesByID(It.IsAny<int>()), Times.Never);
+    }
+
+    private Mock<IShokoSeries> OwnedSeries(int id, int anidbEpisodeId, int localEpisodes = 1)
+    {
+        var series = new Mock<IShokoSeries>();
+        series.Setup(s => s.LocalID).Returns(id);
+        series.Setup(s => s.LinkedSeries).Returns([]);
+        series.Setup(s => s.Episodes).Returns([MakeEpisode(anidbEpisodeId, 1, EpisodeType.Episode, hidden: false, videoCount: 1).Object]);
+        series.Setup(s => s.LocalEpisodeCounts).Returns(new EpisodeCounts { Episodes = localEpisodes });
+        return series;
+    }
+
+    private MissingEpisodeScanner ScannerFor(IEnumerable<Mock<IShokoSeries>> series, FakeHandler handler)
+    {
+        var metadataService = new Mock<IMetadataService>();
+        metadataService.Setup(m => m.GetAllShokoSeries()).Returns([.. series.Select(s => s.Object)]);
+        _settings.Sonarr = new Config.SonarrSettings { BaseUrl = "http://sonarr.local:8989", ApiKey = "key" };
+        return new MissingEpisodeScanner(metadataService.Object, _cacheStore, new SonarrClient(new HttpClient(handler)), new NotificationService(new HttpClient()), _settings, new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient())));
+    }
+
+    private static PendingSearch Pending(int seriesId, int anidbEpisodeId, int sonarrEpisodeId, int failures = 0, DateTime? triggeredAt = null) =>
+        new() { ShokoSeriesId = seriesId, AnidbEpisodeId = anidbEpisodeId, SonarrSeriesId = 55, SonarrEpisodeId = sonarrEpisodeId, TriggeredAtUtc = triggeredAt ?? DateTime.UtcNow, FailedReconciliations = failures };
+
+    private static FakeHandler SonarrReplies(System.Net.HttpStatusCode status) =>
+        new(_ => new HttpResponseMessage(status) { Content = new StringContent("{}") });
+
+    [Fact]
+    public async Task Scan_SingleFailureOnAnOldEntry_KeepsItPending()
+    {
+        _cacheStore.AddPendingSearch(Pending(25, 9005, 782, triggeredAt: DateTime.UtcNow.AddDays(-15)));
+        var scanner = ScannerFor([OwnedSeries(25, 9005)], SonarrReplies(System.Net.HttpStatusCode.InternalServerError));
+
+        await scanner.ScanAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, Assert.Single(_cacheStore.GetPendingSearches()).FailedReconciliations);
+        Assert.Empty(_cacheStore.GetHistory());
+    }
+
+    [Fact]
+    public async Task Scan_PendingEntryOfASeriesWithNoLocalEpisodes_IsLeftAlone()
+    {
+        _cacheStore.AddPendingSearch(Pending(30, 9300, 790));
+        var handler = SonarrReplies(System.Net.HttpStatusCode.Accepted);
+        var scanner = ScannerFor([OwnedSeries(30, 9300, localEpisodes: 0)], handler);
+
+        await scanner.ScanAsync(TestContext.Current.CancellationToken);
+
+        Assert.Single(_cacheStore.GetPendingSearches());
+        Assert.Empty(handler.Requests);
+        Assert.Empty(_cacheStore.GetHistory());
+    }
+
+    [Fact]
+    public async Task Scan_PendingEntryWhenShokoReturnsNoSeries_IsLeftAlone()
+    {
+        _cacheStore.AddPendingSearch(Pending(31, 9301, 791));
+        var handler = SonarrReplies(System.Net.HttpStatusCode.Accepted);
+        var scanner = ScannerFor([], handler);
+
+        await scanner.ScanAsync(TestContext.Current.CancellationToken);
+
+        Assert.Single(_cacheStore.GetPendingSearches());
+        Assert.Empty(handler.Requests);
+    }
+
+    [Fact]
+    public async Task Scan_SonarrDown_StopsReconcilingAfterThreeFailures()
+    {
+        var all = Enumerable.Range(1, 6).Select(i => OwnedSeries(40 + i, 9400 + i)).ToList();
+        foreach (var i in Enumerable.Range(1, 6))
+            _cacheStore.AddPendingSearch(Pending(40 + i, 9400 + i, 800 + i));
+        var handler = SonarrReplies(System.Net.HttpStatusCode.InternalServerError);
+        var scanner = ScannerFor(all, handler);
+
+        await scanner.ScanAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, handler.Requests.Count);
+        Assert.Equal(6, _cacheStore.GetPendingSearches().Count);
+    }
+
+    [Fact]
+    public async Task Scan_EntryCancelledWhileTheScanRuns_IsNotReconciled()
+    {
+        _cacheStore.AddPendingSearch(Pending(51, 9501, 801));
+        _cacheStore.AddPendingSearch(Pending(52, 9502, 802));
+        var handler = new FakeHandler(_ =>
+        {
+            _cacheStore.RemovePendingSearch(52, 9502);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.Accepted) { Content = new StringContent("{}") };
+        });
+        var scanner = ScannerFor([OwnedSeries(51, 9501), OwnedSeries(52, 9502)], handler);
+
+        await scanner.ScanAsync(TestContext.Current.CancellationToken);
+
+        Assert.Single(handler.Requests);
+        var history = Assert.Single(_cacheStore.GetHistory());
+        Assert.Equal(9501, history.AnidbEpisodeId);
     }
 }

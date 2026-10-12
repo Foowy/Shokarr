@@ -18,12 +18,14 @@ public static class ArrUrlRules
     /// <returns>The key to use, or an error message when the request can't be honoured.</returns>
     public static (string? Key, string? Error) ResolveApiKey(IArrSettings incoming, IArrSettings stored)
     {
+        // The settings GET returns the secret mask in place of the key, so a client that PUTs that response back means "keep the stored key".
+        var incomingKey = incoming.ApiKey == ShokarrConstants.SecretMask ? null : incoming.ApiKey;
         if (string.IsNullOrEmpty(incoming.BaseUrl))
-            return (incoming.ApiKey, null);
+            return (incomingKey, null);
         if (!IsHttpUrl(incoming.BaseUrl))
             return (null, InvalidUrlMessage);
-        if (!string.IsNullOrEmpty(incoming.ApiKey))
-            return (incoming.ApiKey, null);
+        if (!string.IsNullOrEmpty(incomingKey))
+            return (incomingKey, null);
         if (!string.Equals(incoming.BaseUrl.TrimEnd('/'), stored.BaseUrl?.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
             return (null, KeyRequiredMessage);
 

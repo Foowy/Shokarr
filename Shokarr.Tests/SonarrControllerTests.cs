@@ -1,6 +1,9 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
+using Shoko.Abstractions.Metadata.Services;
+using Shoko.Abstractions.Metadata.Shoko;
 using Shokarr.Config;
 using Shokarr.Controllers;
 using Shokarr.Controllers.Api;
@@ -15,6 +18,7 @@ public class SonarrControllerTests : IDisposable
     private readonly string _tempDir;
     private readonly ScanCacheStore _cacheStore;
     private readonly FakeSettingsSource _settings = new();
+    private readonly Mock<IMetadataService> _metadata = new();
 
     public SonarrControllerTests()
     {
@@ -44,7 +48,25 @@ public class SonarrControllerTests : IDisposable
         var notificationService = new NotificationService(httpClient); // no webhook configured - NotifyAsync no-ops
         var matcher = new SeriesMatcher(sonarrClient);
         var searchService = new SonarrSearchService(sonarrClient, cacheStore, notificationService);
-        return new SonarrController(matcher, searchService, sonarrClient, cacheStore, notificationService, _settings);
+        return new SonarrController(matcher, searchService, sonarrClient, cacheStore, notificationService, _settings, _metadata.Object);
+    }
+
+    /// <summary>Makes the given series owned in Shoko. The TVDB ID is stored as a confirmed override, which the controller resolves the same way as a TMDB-linked one.</summary>
+    private void Owns(params (int Id, int TvdbId, string Group)[] series)
+    {
+        var mocks = series.Select(x =>
+        {
+            var group = new Mock<IShokoGroup>();
+            group.Setup(g => g.Title).Returns(x.Group);
+            var m = new Mock<IShokoSeries>();
+            m.Setup(s => s.LocalID).Returns(x.Id);
+            m.Setup(s => s.Title).Returns($"S{x.Id}");
+            m.Setup(s => s.ParentGroup).Returns(group.Object);
+            m.Setup(s => s.LinkedSeries).Returns([]);
+            _cacheStore.SetSeriesTvdbId(x.Id, x.TvdbId);
+            return m.Object;
+        }).ToList();
+        _metadata.Setup(m => m.GetAllShokoSeries()).Returns(mocks);
     }
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode status, object body) =>
@@ -167,7 +189,7 @@ public class SonarrControllerTests : IDisposable
     [Fact]
     public async Task SyncTags_NoCandidates_ReturnsZeroedSummary()
     {
-        _cacheStore.SaveScan(new ScanSnapshot { Series = [] });
+        Owns();
         var controller = MakeController(_ => new HttpResponseMessage(HttpStatusCode.OK), _cacheStore);
 
         var result = await controller.SyncTags();
@@ -183,10 +205,7 @@ public class SonarrControllerTests : IDisposable
     [Fact]
     public async Task SyncTags_SeriesNotInSonarr_CountsAsSkipped()
     {
-        _cacheStore.SaveScan(new ScanSnapshot
-        {
-            Series = [new SeriesMissingResult { ShokoSeriesId = 1, Title = "Test Series", TvdbId = 42, GroupTitle = "Some Group" }],
-        });
+        Owns((1, 42, "Some Group"));
         var controller = MakeController(
             _ => JsonResponse(HttpStatusCode.OK, Array.Empty<object>()), // GetExistingSeriesByTvdbIdAsync returns no matches
             _cacheStore);
@@ -202,10 +221,7 @@ public class SonarrControllerTests : IDisposable
     [Fact]
     public async Task SyncTags_SonarrUnreachable_ReportsFailureInsteadOfSkips()
     {
-        _cacheStore.SaveScan(new ScanSnapshot
-        {
-            Series = [new SeriesMissingResult { ShokoSeriesId = 1, Title = "Test Series", TvdbId = 42, GroupTitle = "Some Group" }],
-        });
+        Owns((1, 42, "Some Group"));
         var controller = MakeController(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError), _cacheStore);
 
         var result = await controller.SyncTags();
@@ -218,14 +234,7 @@ public class SonarrControllerTests : IDisposable
     [Fact]
     public async Task SyncTags_LooksUpEachGroupTagOnce()
     {
-        _cacheStore.SaveScan(new ScanSnapshot
-        {
-            Series =
-            [
-                new SeriesMissingResult { ShokoSeriesId = 1, Title = "A", TvdbId = 10, GroupTitle = "Group" },
-                new SeriesMissingResult { ShokoSeriesId = 2, Title = "B", TvdbId = 11, GroupTitle = "Group" },
-            ],
-        });
+        Owns((1, 10, "Group"), (2, 11, "Group"));
         var tagRequests = 0;
         var controller = MakeController(r =>
         {
@@ -249,10 +258,7 @@ public class SonarrControllerTests : IDisposable
 
     private (SonarrController Controller, Func<int> CreateAttempts) SyncTagsController(int groupSize, Func<int, bool> createSucceeds)
     {
-        _cacheStore.SaveScan(new ScanSnapshot
-        {
-            Series = [.. Enumerable.Range(1, groupSize).Select(i => new SeriesMissingResult { ShokoSeriesId = i, Title = $"S{i}", TvdbId = 10 + i, GroupTitle = "Group" })],
-        });
+        Owns([.. Enumerable.Range(1, groupSize).Select(i => (i, 10 + i, "Group"))]);
         var attempts = 0;
         var controller = MakeController(r =>
         {
@@ -299,10 +305,7 @@ public class SonarrControllerTests : IDisposable
     [Fact]
     public async Task SyncTags_TagListUnavailable_ReportsFailure()
     {
-        _cacheStore.SaveScan(new ScanSnapshot
-        {
-            Series = [new SeriesMissingResult { ShokoSeriesId = 1, Title = "A", TvdbId = 10, GroupTitle = "Group" }],
-        });
+        Owns((1, 10, "Group"));
         var controller = MakeController(r => r.RequestUri!.PathAndQuery == "/api/v3/series"
             ? JsonResponse(HttpStatusCode.OK, new[] { new { id = 1, tvdbId = 10 } })
             : new HttpResponseMessage(HttpStatusCode.InternalServerError), _cacheStore);
@@ -310,5 +313,42 @@ public class SonarrControllerTests : IDisposable
         var result = await controller.SyncTags();
 
         Assert.False(Assert.IsType<ShokarrBaseController.ApiResponse<object>>(Assert.IsType<OkObjectResult>(result).Value).Success);
+    }
+
+    [Fact]
+    public async Task SyncTags_CoversOwnedSeriesThatAreNotInTheLastScan()
+    {
+        _cacheStore.SaveScan(new ScanSnapshot { Series = [] });
+        Owns((1, 10, "Group"));
+        var tagged = 0;
+        var controller = MakeController(r =>
+        {
+            var path = r.RequestUri!.PathAndQuery;
+            if (path.StartsWith("/api/v3/tag"))
+                return JsonResponse(HttpStatusCode.OK, new[] { new { id = 5, label = "Group" } });
+            if (path == "/api/v3/series")
+                return JsonResponse(HttpStatusCode.OK, new[] { new { id = 1, tvdbId = 10 } });
+            tagged++;
+            return JsonResponse(HttpStatusCode.OK, new { id = 1, tags = Array.Empty<int>() });
+        }, _cacheStore);
+
+        var data = TagResultOf(await controller.SyncTags());
+
+        Assert.Equal(1, data.Updated);
+        Assert.True(tagged > 0);
+    }
+
+    [Fact]
+    public async Task AddAndSearch_TitleSearchMatch_IsRememberedForTheSeries()
+    {
+        _settings.Sonarr = new SonarrSettings { BaseUrl = "http://sonarr.local:8989", ApiKey = "testkey", QualityProfileId = 1, RootFolderPath = "/tv" };
+        _cacheStore.SaveScan(new ScanSnapshot { Series = [new SeriesMissingResult { ShokoSeriesId = 1, Title = "Test Series" }] });
+        var controller = MakeController(r =>
+            JsonResponse(HttpStatusCode.OK, r.RequestUri!.PathAndQuery.Contains("tvdbId") ? new[] { new { id = 9, tvdbId = 42, titleSlug = "test" } } : Array.Empty<object>()), _cacheStore);
+        controller.ControllerContext = new ControllerContext { HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext() };
+
+        await controller.AddAndSearch(new AddAndSearchRequest(1, 42, [1]));
+
+        Assert.Equal(42, _cacheStore.GetSeriesOverride(1)!.TvdbId);
     }
 }

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using Shokarr.Models;
 
@@ -38,7 +40,7 @@ public static partial class SpecialMatcher
     }
 
     internal static DateOnly? AirDateOf(SonarrEpisodeResource se) =>
-        DateOnly.TryParse(se.AirDate, out var d) ? d : null;
+        DateOnly.TryParse(se.AirDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
 
     internal static double Similarity(string? a, string? b)
     {
@@ -50,8 +52,19 @@ public static partial class SpecialMatcher
     }
 
     private static HashSet<string> Tokens(string? s) =>
-        s is null ? [] : [.. NonAlphanumeric().Split(s.ToLowerInvariant()).Where(t => t.Length > 0)];
+        s is null ? [] : [.. NonWord().Split(StripLatinDiacritics(s).ToLowerInvariant()).Where(t => t.Length > 0)];
 
-    [GeneratedRegex("[^a-z0-9]+")]
-    private static partial Regex NonAlphanumeric();
+    /// <summary>Drops accent and macron marks after Latin letters (so "Okami" matches "Ōkami") but keeps kana voicing marks, which change the character.</summary>
+    private static string StripLatinDiacritics(string s)
+    {
+        var decomposed = s.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(decomposed.Length);
+        foreach (var c in decomposed)
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark || sb.Length == 0 || sb[^1] > '\u024F')
+                sb.Append(c);
+        return sb.ToString().Normalize(NormalizationForm.FormC);
+    }
+
+    [GeneratedRegex(@"[^\p{L}\p{N}]+")]
+    private static partial Regex NonWord();
 }

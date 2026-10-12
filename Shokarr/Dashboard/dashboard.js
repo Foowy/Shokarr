@@ -287,7 +287,7 @@ function updateBulkActionsBar() {
 }
 
 document.getElementById('bulk-select-all').onclick = () => {
-  for (const s of lastSeriesList) bulkSelectedIds.add(String(s.ShokoSeriesId));
+  for (const s of lastSeriesList.filter(s => countedEpisodes(s) > 0)) bulkSelectedIds.add(String(s.ShokoSeriesId));
   renderSeries({ Data: { Series: lastSeriesList } });
 };
 
