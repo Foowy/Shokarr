@@ -139,4 +139,23 @@ public class SonarrEpisodeStatusResolverTests
         Assert.Single(handler.Paths);
         Assert.All(all, s => Assert.Equal("none", s.MissingEpisodes[0].SonarrState));
     }
+
+    [Fact]
+    public async Task Apply_BulkSession_FetchesSeriesListOnceForAllSeries()
+    {
+        var handler = new CountingHandler(r =>
+        {
+            var path = r.RequestUri!.PathAndQuery;
+            return path == "/api/v3/series"
+                ? Json("""[{"id":7,"tvdbId":1},{"id":8,"tvdbId":2}]""")
+                : HappyPath(r);
+        });
+        var session = await new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient(handler))).BeginAsync(Settings, TestContext.Current.CancellationToken, bulk: true);
+
+        await session.ApplyAsync(Series(1, 1));
+        await session.ApplyAsync(Series(2, 1));
+
+        Assert.Single(handler.Paths, p => p == "/api/v3/series");
+        Assert.DoesNotContain(handler.Paths, p => p.StartsWith("/api/v3/series?tvdbId"));
+    }
 }

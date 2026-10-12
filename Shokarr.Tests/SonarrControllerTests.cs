@@ -198,4 +198,52 @@ public class SonarrControllerTests : IDisposable
         var data = Assert.IsType<TagSyncResult>(response.Data);
         Assert.Equal(1, data.SkippedNoMatch);
     }
+
+    [Fact]
+    public async Task SyncTags_SonarrUnreachable_ReportsFailureInsteadOfSkips()
+    {
+        _cacheStore.SaveScan(new ScanSnapshot
+        {
+            Series = [new SeriesMissingResult { ShokoSeriesId = 1, Title = "Test Series", TvdbId = 42, GroupTitle = "Some Group" }],
+        });
+        var controller = MakeController(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError), _cacheStore);
+
+        var result = await controller.SyncTags();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ShokarrBaseController.ApiResponse<object>>(ok.Value);
+        Assert.False(response.Success);
+    }
+
+    [Fact]
+    public async Task SyncTags_LooksUpEachGroupTagOnce()
+    {
+        _cacheStore.SaveScan(new ScanSnapshot
+        {
+            Series =
+            [
+                new SeriesMissingResult { ShokoSeriesId = 1, Title = "A", TvdbId = 10, GroupTitle = "Group" },
+                new SeriesMissingResult { ShokoSeriesId = 2, Title = "B", TvdbId = 11, GroupTitle = "Group" },
+            ],
+        });
+        var tagRequests = 0;
+        var controller = MakeController(r =>
+        {
+            var path = r.RequestUri!.PathAndQuery;
+            if (path.StartsWith("/api/v3/tag"))
+            {
+                tagRequests++;
+                return JsonResponse(HttpStatusCode.OK, new[] { new { id = 5, label = "Group" } });
+            }
+            if (path == "/api/v3/series")
+                return JsonResponse(HttpStatusCode.OK, new[] { new { id = 1, tvdbId = 10 }, new { id = 2, tvdbId = 11 } });
+            return JsonResponse(HttpStatusCode.OK, new { id = 1, tags = Array.Empty<int>() });
+        }, _cacheStore);
+
+        var result = await controller.SyncTags();
+
+        var data = Assert.IsType<TagSyncResult>(Assert.IsType<ShokarrBaseController.ApiResponse<object>>(Assert.IsType<OkObjectResult>(result).Value).Data);
+        Assert.Equal(2, data.Updated);
+        Assert.Equal(1, tagRequests);
+    }
 }
