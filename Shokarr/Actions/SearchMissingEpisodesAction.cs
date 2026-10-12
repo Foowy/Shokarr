@@ -43,7 +43,9 @@ public class SearchMissingEpisodesAction(SeriesMatcher matcher, SonarrSearchServ
             throw new InvalidOperationException(error);
 
         var existing = await sonarrClient.GetExistingSeriesByTvdbIdAsync(settings, tvdbId, token).ConfigureAwait(false);
-        if (!existing.Success || existing.Data!.Count == 0)
+        if (!existing.Success)
+            throw new InvalidOperationException($"Couldn't reach Sonarr: {existing.ErrorMessage}");
+        if (existing.Data!.Count == 0)
             throw new InvalidOperationException("Series is confirmed in Sonarr's lookup but not yet added - use the Shokarr dashboard to add it first.");
 
         var anidbEpisodeIds = series.MissingEpisodes.Where(e => e.SonarrState == "none").Select(e => e.AnidbEpisodeId).ToList();
