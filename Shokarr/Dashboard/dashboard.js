@@ -392,7 +392,8 @@ function currentSettingsForm() {
     includeSpecials: document.getElementById('settings-include-specials').checked,
     hideUnaired: document.getElementById('settings-hide-unaired').checked,
     countSonarrHeldAsMissing: document.getElementById('settings-count-sonarr-held').checked,
-    notificationWebhookUrl: document.getElementById('settings-webhook').value,
+    // Omitted (null) until the stored settings have loaded, so an early save can't clear the saved webhook.
+    notificationWebhookUrl: settingsLoaded ? document.getElementById('settings-webhook').value : null,
   };
 }
 
@@ -438,6 +439,8 @@ async function showSavedArrSelection(key, data) {
   }
 }
 
+let settingsLoaded = false;
+
 async function loadSettings() {
   const result = await fetchJson('/Settings');
   document.getElementById('settings-url').value = result.Data.BaseUrl || '';
@@ -447,6 +450,7 @@ async function loadSettings() {
   document.getElementById('settings-key').placeholder = result.Data.ApiKey ? 'Key saved (leave blank to keep)' : '';
   // The mask round-trips as "keep the stored webhook"; clearing the field removes it.
   document.getElementById('settings-webhook').value = result.Data.NotificationWebhookUrl || '';
+  settingsLoaded = true;
   document.getElementById('settings-interval').value = result.Data.ScanIntervalHours;
   document.getElementById('settings-include-specials').checked = result.Data.IncludeSpecials;
   document.getElementById('settings-hide-unaired').checked = result.Data.HideUnaired;
@@ -739,10 +743,6 @@ document.getElementById('save-settings').onclick = async () => {
     rootFolderPath: document.getElementById('settings-root-folder').value || null,
   };
   const sonarrSaved = await fetchJson('/Settings', { method: 'PUT', body: JSON.stringify(settings) });
-  if (!sonarrSaved?.Success) {
-    setStatus(`Not saved: ${sonarrSaved?.Message || 'Sonarr settings were rejected.'}`, false);
-    return;
-  }
 
   const radarrSettings = {
     baseUrl: document.getElementById('radarr-settings-url').value,
@@ -751,11 +751,17 @@ document.getElementById('save-settings').onclick = async () => {
     rootFolderPath: document.getElementById('radarr-settings-root-folder').value || null,
   };
   const radarrSaved = await fetchJson('/RadarrSettings', { method: 'PUT', body: JSON.stringify(radarrSettings) });
-  if (!radarrSaved?.Success) {
-    setStatus(`Sonarr saved, Radarr not saved: ${radarrSaved?.Message || 'Radarr settings were rejected.'}`, false);
+  if (radarrSaved?.Success)
+    document.getElementById('radarr-settings-key').value = '';
+
+  // Both saves are always attempted, so a rejected Sonarr form doesn't block a valid Radarr change (or the reverse).
+  const failures = [];
+  if (!sonarrSaved?.Success) failures.push(`Sonarr: ${sonarrSaved?.Message || 'settings were rejected'}`);
+  if (!radarrSaved?.Success) failures.push(`Radarr: ${radarrSaved?.Message || 'settings were rejected'}`);
+  if (failures.length) {
+    setStatus(`Not saved - ${failures.join('; ')}`, false);
     return;
   }
-  document.getElementById('radarr-settings-key').value = '';
 
   setStatus('Saved.', true);
   document.getElementById('settings-key').value = '';
