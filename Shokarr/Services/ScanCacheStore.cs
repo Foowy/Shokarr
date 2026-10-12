@@ -90,6 +90,10 @@ public class ScanCacheStore : IDisposable
             o.RootFolderPath = rootFolderPath;
         });
 
+    /// <summary>Remembers the TVDB ID the user confirmed for a series, preserving any other override already set.</summary>
+    public void SetSeriesTvdbId(int shokoSeriesId, int tvdbId) =>
+        UpsertSeriesOverride(shokoSeriesId, o => o.TvdbId = tvdbId);
+
     /// <summary>Applies <paramref name="mutate"/> to the existing override row and replaces it, deleting the row if no fields remain set. Read-mutate-write so setting one field never wipes another.</summary>
     private void UpsertSeriesOverride(int shokoSeriesId, Action<SeriesOverride> mutate)
     {
@@ -100,7 +104,7 @@ public class ScanCacheStore : IDisposable
             var existing = col.Find(o => o.ShokoSeriesId == shokoSeriesId).FirstOrDefault() ?? new SeriesOverride { ShokoSeriesId = shokoSeriesId };
             mutate(existing);
             col.DeleteMany(o => o.ShokoSeriesId == shokoSeriesId);
-            if (existing.IncludeSpecials is not null || existing.QualityProfileId is not null || !string.IsNullOrEmpty(existing.RootFolderPath))
+            if (existing.IncludeSpecials is not null || existing.TvdbId is not null || existing.QualityProfileId is not null || !string.IsNullOrEmpty(existing.RootFolderPath))
                 col.Insert(existing);
             _db.Commit();
         }

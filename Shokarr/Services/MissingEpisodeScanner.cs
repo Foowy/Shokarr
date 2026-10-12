@@ -138,6 +138,14 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         return includeSpecials ? candidates : candidates.Where(e => e.Type == EpisodeType.Episode);
     }
 
+    /// <summary>The TVDB ID Sonarr should be matched on: the TMDB-linked one, else the one the user confirmed from a title search.</summary>
+    public static int? ResolveTvdbId(IShokoSeries series, SeriesOverride? seriesOverride) =>
+        series.GetLinkedSeries(MetadataSource.TMDB)
+            .SelectMany(s => s.CrossSourceIDs)
+            .Where(id => id.Source.Value == "tvdb" && id.EntityType == MetadataEntityType.Series && id.TryGetNumericID<int>(out _))
+            .Select(id => (int?)id.GetNumericID<int>())
+            .FirstOrDefault() ?? seriesOverride?.TvdbId;
+
     /// <summary>Builds the missing-episode result for one series, or null if it has nothing missing after the specials scope and HideUnaired filters.</summary>
     private SeriesMissingResult? BuildSeriesResult(IShokoSeries series, IEnumerable<IShokoEpisode> inScope, Config.SonarrSettings settings, ILookup<(int, int), PendingSearch> pendingByKey, DateOnly today)
     {
@@ -163,17 +171,11 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         if (displayMissing.Count == 0)
             return null;
 
-        var tvdbId = series.GetLinkedSeries(MetadataSource.TMDB)
-            .SelectMany(s => s.CrossSourceIDs)
-            .Where(id => id.Source.Value == "tvdb" && id.EntityType == MetadataEntityType.Series && id.TryGetNumericID<int>(out _))
-            .Select(id => (int?)id.GetNumericID<int>())
-            .FirstOrDefault();
-
         return new SeriesMissingResult
         {
             ShokoSeriesId = series.LocalID,
             Title = series.Title,
-            TvdbId = tvdbId,
+            TvdbId = ResolveTvdbId(series, seriesOverride),
             GroupTitle = series.ParentGroup?.Title,
             QualityProfileIdOverride = seriesOverride?.QualityProfileId,
             RootFolderPathOverride = seriesOverride?.RootFolderPath,
