@@ -759,4 +759,15 @@ public class MissingEpisodeScannerTests : IDisposable
         Assert.Null(snapshot);
         Assert.Null(_cacheStore.GetLastScan());
     }
+
+    [Fact]
+    public async Task PatchSeriesAsync_WithoutPriorScan_SkipsTheSonarrAndShokoWork()
+    {
+        var metadataService = new Mock<IMetadataService>();
+        var scanner = new MissingEpisodeScanner(metadataService.Object, _cacheStore, new SonarrClient(new HttpClient()), new NotificationService(new HttpClient()), _settings, new SonarrEpisodeStatusResolver(new SonarrClient(new HttpClient())));
+
+        Assert.Null(await scanner.PatchSeriesAsync(2, TestContext.Current.CancellationToken));
+
+        metadataService.Verify(m => m.GetShokoSeriesByID(It.IsAny<int>()), Times.Never);
+    }
 }

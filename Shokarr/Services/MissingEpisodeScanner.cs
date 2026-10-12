@@ -38,6 +38,9 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
     /// <summary>Recomputes one series and splices it into the persisted snapshot, under the same lock as <see cref="ScanAsync"/>. Does not reconcile. Returns null when no full scan has run yet, since a one-series snapshot would be mistaken for a completed scan.</summary>
     public async Task<ScanSnapshot?> PatchSeriesAsync(int shokoSeriesId, CancellationToken ct = default)
     {
+        if (cacheStore.GetLastScan() is null)
+            return null;
+
         var updated = await ScanSeriesAsync(shokoSeriesId, ct).ConfigureAwait(false);
         await _scanLock.WaitAsync(ct).ConfigureAwait(false);
         try

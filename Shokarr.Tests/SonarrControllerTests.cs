@@ -247,35 +247,68 @@ public class SonarrControllerTests : IDisposable
         Assert.Equal(1, tagRequests);
     }
 
-    [Fact]
-    public async Task SyncTags_FailedTagLookup_IsNotCachedForTheGroup()
+    private (SonarrController Controller, Func<int> CreateAttempts) SyncTagsController(int groupSize, Func<int, bool> createSucceeds)
     {
         _cacheStore.SaveScan(new ScanSnapshot
         {
-            Series =
-            [
-                new SeriesMissingResult { ShokoSeriesId = 1, Title = "A", TvdbId = 10, GroupTitle = "Group" },
-                new SeriesMissingResult { ShokoSeriesId = 2, Title = "B", TvdbId = 11, GroupTitle = "Group" },
-            ],
+            Series = [.. Enumerable.Range(1, groupSize).Select(i => new SeriesMissingResult { ShokoSeriesId = i, Title = $"S{i}", TvdbId = 10 + i, GroupTitle = "Group" })],
         });
-        var tagRequests = 0;
+        var attempts = 0;
         var controller = MakeController(r =>
         {
             var path = r.RequestUri!.PathAndQuery;
             if (path.StartsWith("/api/v3/tag"))
-                return ++tagRequests == 1
-                    ? new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                    : JsonResponse(HttpStatusCode.OK, new[] { new { id = 5, label = "Group" } });
+            {
+                if (r.Method == HttpMethod.Get)
+                    return JsonResponse(HttpStatusCode.OK, Array.Empty<object>());
+                return createSucceeds(++attempts) ? JsonResponse(HttpStatusCode.OK, new { id = 5, label = "Group" }) : new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            }
             if (path == "/api/v3/series")
-                return JsonResponse(HttpStatusCode.OK, new[] { new { id = 1, tvdbId = 10 }, new { id = 2, tvdbId = 11 } });
+                return JsonResponse(HttpStatusCode.OK, Enumerable.Range(1, groupSize).Select(i => new { id = i, tvdbId = 10 + i }).ToArray());
             return JsonResponse(HttpStatusCode.OK, new { id = 1, tags = Array.Empty<int>() });
         }, _cacheStore);
+        return (controller, () => attempts);
+    }
+
+    private static TagSyncResult TagResultOf(IActionResult result) =>
+        Assert.IsType<TagSyncResult>(Assert.IsType<ShokarrBaseController.ApiResponse<object>>(Assert.IsType<OkObjectResult>(result).Value).Data);
+
+    [Fact]
+    public async Task SyncTags_TransientCreateFailure_IsRetriedForTheNextSeries()
+    {
+        var (controller, createAttempts) = SyncTagsController(groupSize: 2, createSucceeds: n => n > 1);
+
+        var data = TagResultOf(await controller.SyncTags());
+
+        Assert.Equal(1, data.Failed);
+        Assert.Equal(1, data.Updated);
+        Assert.Equal(2, createAttempts());
+    }
+
+    [Fact]
+    public async Task SyncTags_RejectedLabel_StopsRetryingAfterTwoAttempts()
+    {
+        var (controller, createAttempts) = SyncTagsController(groupSize: 5, createSucceeds: _ => false);
+
+        var data = TagResultOf(await controller.SyncTags());
+
+        Assert.Equal(5, data.Failed);
+        Assert.Equal(2, createAttempts());
+    }
+
+    [Fact]
+    public async Task SyncTags_TagListUnavailable_ReportsFailure()
+    {
+        _cacheStore.SaveScan(new ScanSnapshot
+        {
+            Series = [new SeriesMissingResult { ShokoSeriesId = 1, Title = "A", TvdbId = 10, GroupTitle = "Group" }],
+        });
+        var controller = MakeController(r => r.RequestUri!.PathAndQuery == "/api/v3/series"
+            ? JsonResponse(HttpStatusCode.OK, new[] { new { id = 1, tvdbId = 10 } })
+            : new HttpResponseMessage(HttpStatusCode.InternalServerError), _cacheStore);
 
         var result = await controller.SyncTags();
 
-        var data = Assert.IsType<TagSyncResult>(Assert.IsType<ShokarrBaseController.ApiResponse<object>>(Assert.IsType<OkObjectResult>(result).Value).Data);
-        Assert.Equal(1, data.Failed);
-        Assert.Equal(1, data.Updated);
-        Assert.Equal(2, tagRequests);
+        Assert.False(Assert.IsType<ShokarrBaseController.ApiResponse<object>>(Assert.IsType<OkObjectResult>(result).Value).Success);
     }
 }

@@ -368,4 +368,17 @@ public class ScanCacheStoreTests : IDisposable
         Assert.True((pendingRead - at).Duration() < TimeSpan.FromSeconds(1));
         Assert.True((historyRead - at).Duration() < TimeSpan.FromSeconds(1));
     }
+
+    [Fact]
+    public void PersistedModels_OnlyHaveTheDateTimeFieldsTheStoreConvertsToUtc()
+    {
+        var dateTimeProperties = typeof(ScanSnapshot).Assembly.GetTypes()
+            .Where(t => t.Namespace == typeof(ScanSnapshot).Namespace)
+            .SelectMany(t => t.GetProperties().Where(p => p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?)))
+            .Select(p => $"{p.DeclaringType!.Name}.{p.Name}")
+            .Order();
+
+        // A new DateTime property must also be converted with ToUniversalTime where ScanCacheStore reads it back.
+        Assert.Equal(["PendingSearch.TriggeredAtUtc", "ScanSnapshot.ScannedAtUtc", "SearchHistoryEntry.TimestampUtc"], dateTimeProperties);
+    }
 }

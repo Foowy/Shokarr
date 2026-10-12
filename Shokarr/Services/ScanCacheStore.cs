@@ -32,7 +32,8 @@ public class ScanCacheStore : IDisposable
         MigrateLegacyDataFolder(dataPath, pluginDir, "shoko_arr");
         MigrateLegacyDataFolder(dataPath, pluginDir, "shoko_sonarr");
         Directory.CreateDirectory(pluginDir);
-        _db = new LiteDatabase(Path.Combine(pluginDir, ShokarrConstants.LiteDbFileName));
+        // A private mapper keeps this store off LiteDB's process-wide BsonMapper.Global, which other plugins in the host could customize.
+        _db = new LiteDatabase(Path.Combine(pluginDir, ShokarrConstants.LiteDbFileName), new BsonMapper());
     }
 
     // Builds before 1.0 used the ShokoSonarr names, 1.0 the ShokoArr names; each kept its folder and database under
@@ -177,10 +178,10 @@ public class ScanCacheStore : IDisposable
     public List<SearchHistoryEntry> GetHistory(int limit = 200)
     {
         var col = _db.GetCollection<SearchHistoryEntry>(SearchHistoryCollectionName);
-        var entries = col.FindAll().OrderByDescending(e => e.TimestampUtc).Take(limit).ToList();
+        var entries = col.FindAll().ToList();
         foreach (var entry in entries)
             entry.TimestampUtc = entry.TimestampUtc.ToUniversalTime();
-        return entries;
+        return [.. entries.OrderByDescending(e => e.TimestampUtc).Take(limit)];
     }
 
     private class SettingsDocument

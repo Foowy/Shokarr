@@ -87,7 +87,14 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
             return Ok(new ApiResponse<object>(Success: false, Message: inSonarr.ErrorMessage, Data: null));
 
         var bySonarrTvdbId = inSonarr.Data!.ToTvdbLookup();
+        var existingTags = await sonarrClient.GetTagsAsync(settings);
+        if (!existingTags.Success)
+            return Ok(new ApiResponse<object>(Success: false, Message: existingTags.ErrorMessage, Data: null));
+
         var tagIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var t in existingTags.Data!)
+            tagIds.TryAdd(t.Label, t.Id);
+        var createFailures = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var series in candidates)
         {
             if (!bySonarrTvdbId.TryGetValue(series.TvdbId!.Value, out var existing))
@@ -96,17 +103,24 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
                 continue;
             }
 
-            // Only successful lookups are cached, so one transient failure doesn't fail every other series in the group.
             if (!tagIds.TryGetValue(series.GroupTitle!, out var tagId))
             {
-                var tag = await sonarrClient.EnsureTagIdAsync(settings, series.GroupTitle!);
-                if (!tag.Success)
+                // Two tries per group: enough to ride out a transient failure without a rejected label costing a request per series.
+                if (createFailures.GetValueOrDefault(series.GroupTitle!) >= 2)
                 {
                     failed++;
                     continue;
                 }
 
-                tagIds[series.GroupTitle!] = tagId = tag.Data;
+                var created = await sonarrClient.CreateTagAsync(settings, series.GroupTitle!);
+                if (!created.Success)
+                {
+                    createFailures[series.GroupTitle!] = createFailures.GetValueOrDefault(series.GroupTitle!) + 1;
+                    failed++;
+                    continue;
+                }
+
+                tagIds[series.GroupTitle!] = tagId = created.Data!.Id;
             }
 
             var update = await sonarrClient.UpdateSeriesTagAsync(settings, existing.Id, tagId);

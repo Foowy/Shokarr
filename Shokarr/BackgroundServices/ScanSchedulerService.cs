@@ -13,10 +13,7 @@ public class ScanSchedulerService(ISystemService systemService, MissingEpisodeSc
     /// <summary>Longest the loop sleeps before re-reading the interval setting, so a changed interval takes effect within this window.</summary>
     private static readonly TimeSpan s_maxSleep = TimeSpan.FromHours(1);
 
-    /// <summary>How long to sleep until the next due check: at most an hour, and a minute when already overdue.</summary>
-    /// <param name="dueAt">When the next scan is due.</param>
-    /// <param name="nowUtc">The current time.</param>
-    /// <returns>The delay before the loop re-evaluates.</returns>
+    /// <summary>Sleep until due, capped at an hour so a changed interval setting is noticed promptly.</summary>
     public static TimeSpan NextDelay(DateTime dueAt, DateTime nowUtc)
     {
         var delay = dueAt - nowUtc;

@@ -150,4 +150,15 @@ public class ScanControllerTests : IDisposable
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
+
+    [Fact]
+    public async Task SeriesOverrides_BeforeAnyScan_ReturnNoContent()
+    {
+        var metadataService = new Mock<IMetadataService>();
+        metadataService.Setup(m => m.GetShokoSeriesByID(5)).Returns(new Mock<IShokoSeries>().Object);
+        var controller = MakeController(metadataService, _cacheStore);
+
+        Assert.IsType<NoContentResult>(await controller.SetSeriesSpecials(5, new SetSeriesSpecialsRequest(true)));
+        Assert.IsType<NoContentResult>(await controller.SetSeriesSonarrOverride(5, new SetSeriesSonarrOverrideRequest(3, "/anime")));
+    }
 }
