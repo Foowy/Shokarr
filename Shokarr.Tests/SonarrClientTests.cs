@@ -369,4 +369,54 @@ public class SonarrClientTests
         Assert.Contains(5000, result.Data);
         Assert.Equal(2, pages.Count);
     }
+
+    [Fact]
+    public async Task Requests_TrimWhitespaceAroundTheBaseUrl()
+    {
+        var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
+        var client = new SonarrClient(new HttpClient(handler));
+
+        var result = await client.TestConnectionAsync(new SonarrSettings { BaseUrl = " http://sonarr.local:8989/ ", ApiKey = "k" }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        Assert.Equal("http://sonarr.local:8989/api/v3/system/status", handler.LastRequest!.RequestUri!.ToString());
+    }
+
+    [Theory]
+    [InlineData("http://[bad")]
+    [InlineData("not a url at all")]
+    public async Task Requests_WithAnUnusableBaseUrl_FailInsteadOfThrowing(string baseUrl)
+    {
+        var client = new SonarrClient(new HttpClient(new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK))));
+
+        var result = await client.GetAllSeriesAsync(new SonarrSettings { BaseUrl = baseUrl, ApiKey = "k" }, TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+    }
+
+    [Fact]
+    public async Task FailedResponse_IncludesSonarrsValidationMessage()
+    {
+        var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.BadRequest) { Content = new StringContent("""[{"propertyName":"Path","errorMessage":"Path 'C:\\tv' is already configured\nfor another series"}]""") });
+        var client = new SonarrClient(new HttpClient(handler));
+
+        var result = await client.GetAllSeriesAsync(TestSettings, TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        Assert.Contains("400", result.ErrorMessage);
+        Assert.Contains("already configured for another series", result.ErrorMessage);
+        Assert.DoesNotContain("\n", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task TestConnectionAsync_LoginPageWith200_IsNotReportedAsConnected()
+    {
+        var handler = new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<html><body>Sign in</body></html>") });
+        var client = new SonarrClient(new HttpClient(handler));
+
+        var result = await client.TestConnectionAsync(TestSettings, TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        Assert.Contains("login", result.ErrorMessage);
+    }
 }

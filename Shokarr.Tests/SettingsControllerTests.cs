@@ -182,4 +182,15 @@ public class SettingsControllerTests
 
         Assert.Equal("http://hook", source.Sonarr.NotificationWebhookUrl);
     }
+
+    [Fact]
+    public void SaveSettings_ApiKeyMask_KeepsTheStoredKey()
+    {
+        var source = Stored();
+        var controller = new SettingsController(source, null!);
+
+        controller.SaveSettings(new SonarrSettings { BaseUrl = "http://sonarr", ApiKey = ShokarrConstants.SecretMask });
+
+        Assert.Equal("secret", source.Sonarr.ApiKey);
+    }
 }
