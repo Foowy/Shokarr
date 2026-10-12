@@ -339,4 +339,16 @@ public class ScanCacheStoreTests : IDisposable
 
         Assert.Equal(500, _store.GetHistory(1000).Count);
     }
+
+    [Fact]
+    public void SaveScan_ReadsTimestampBackAsUtc()
+    {
+        var scannedAt = DateTime.UtcNow;
+        _store.SaveScan(new ScanSnapshot { ScannedAtUtc = scannedAt, Series = [] });
+
+        var read = _store.GetLastScan()!.ScannedAtUtc;
+
+        Assert.Equal(DateTimeKind.Utc, read.Kind);
+        Assert.True((read - scannedAt).Duration() < TimeSpan.FromSeconds(1));
+    }
 }

@@ -69,4 +69,14 @@ public class LegacySettingsMigratorTests
 
         Assert.Equal(expected, target.ScanIntervalHours);
     }
+
+    [Fact]
+    public void TryMigrate_CopiesCountSonarrHeldAsMissing()
+    {
+        var target = new ShokarrConfiguration();
+
+        LegacySettingsMigrator.TryMigrate(new SonarrSettings { BaseUrl = "http://s", CountSonarrHeldAsMissing = false }, new RadarrSettings(), target);
+
+        Assert.False(target.ToSonarrSettings().CountSonarrHeldAsMissing);
+    }
 }

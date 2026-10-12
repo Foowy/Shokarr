@@ -184,4 +184,21 @@ public class ActionsTests : IDisposable
         Assert.Equal("Every missing episode of this series is already in Sonarr.", ex.Message);
         Assert.Empty(bodies);
     }
+
+    [Fact]
+    public async Task SearchMissingEpisodesAction_Execute_SonarrUnreachable_ReportsConnectivityNotMissingSeries()
+    {
+        _settings.Sonarr = new SonarrSettings { BaseUrl = "http://sonarr.local:8989", ApiKey = "testkey" };
+        _cacheStore.SaveScan(new ScanSnapshot { Series = [HeldSeries("none")] });
+        var sonarrClient = MakeSonarrClient(r => r.RequestUri!.PathAndQuery.StartsWith("/api/v3/series/lookup")
+            ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("""[{"tvdbId":81797,"title":"One Piece","year":1999}]""") }
+            : new HttpResponseMessage(HttpStatusCode.InternalServerError));
+        var searchService = new SonarrSearchService(sonarrClient, _cacheStore, new NotificationService(new HttpClient()));
+        var action = new SearchMissingEpisodesAction(new SeriesMatcher(sonarrClient), searchService, sonarrClient, _cacheStore, _settings);
+        SetSeriesContext(action, MakeSeries(1).Object);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => action.Execute(TestContext.Current.CancellationToken));
+
+        Assert.Contains("reach Sonarr", ex.Message);
+    }
 }

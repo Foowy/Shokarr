@@ -389,7 +389,7 @@ button.primary:hover { background: var(--amber-dim); color: var(--ink); }
   transition: max-height 260ms ease, opacity 200ms ease, padding-bottom 260ms ease;
 }
 .series-row.expanded .episodes {
-  /* Generous enough to never clip even long-running series' full missing-episode lists —
+  /* Generous enough to never clip even long-running series' full missing-episode lists -
      a smaller cap would silently truncate content instead of just animating less smoothly. */
   max-height: 8000px;
   opacity: 1;

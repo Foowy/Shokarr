@@ -32,7 +32,10 @@ public class ScanCacheStore : IDisposable
         MigrateLegacyDataFolder(dataPath, pluginDir, "shoko_arr");
         MigrateLegacyDataFolder(dataPath, pluginDir, "shoko_sonarr");
         Directory.CreateDirectory(pluginDir);
-        _db = new LiteDatabase(Path.Combine(pluginDir, ShokarrConstants.LiteDbFileName));
+        // LiteDB hands DateTimes back as Kind=Local; comparisons against DateTime.UtcNow ignore Kind, so every stored *Utc value would be off by the host's UTC offset.
+        var mapper = new BsonMapper();
+        mapper.RegisterType(value => new BsonValue(value), bson => bson.AsDateTime.ToUniversalTime());
+        _db = new LiteDatabase(Path.Combine(pluginDir, ShokarrConstants.LiteDbFileName), mapper);
     }
 
     // Builds before 1.0 used the ShokoSonarr names, 1.0 the ShokoArr names; each kept its folder and database under

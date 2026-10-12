@@ -18,6 +18,7 @@ public static class LegacySettingsMigrator
         target.ScanIntervalHours = Math.Clamp(sonarr.ScanIntervalHours, 0, 720);
         target.IncludeSpecials = sonarr.IncludeSpecials;
         target.HideUnaired = sonarr.HideUnaired;
+        target.CountSonarrHeldAsMissing = sonarr.CountSonarrHeldAsMissing;
         target.NotificationWebhookUrl = sonarr.NotificationWebhookUrl;
         target.RadarrUrl = radarr.BaseUrl;
         target.RadarrApiKey = radarr.ApiKey;

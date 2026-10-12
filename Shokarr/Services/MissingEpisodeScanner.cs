@@ -15,9 +15,8 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
     /// <summary>Pending entries older than this are dropped even if Sonarr keeps rejecting the unmonitor call (e.g. the Sonarr episode was deleted out-of-band), so a permanently-failing entry doesn't retry forever.</summary>
     private static readonly TimeSpan MaxPendingAge = TimeSpan.FromDays(14);
 
-    // ponytail: single global lock -- serializes full scans and the per-series patch so their
-    // read-modify-write of the persisted snapshot can't interleave. No need to cache/share the
-    // in-flight result.
+    // Single global lock: serializes full scans and the per-series patch so their read-modify-write
+    // of the persisted snapshot can't interleave. The in-flight result is not cached or shared.
     private readonly SemaphoreSlim _scanLock = new(1, 1);
 
     /// <summary>Runs a full scan, reconciles any pending Sonarr searches against the fresh results, persists the snapshot, and returns it.</summary>
@@ -50,10 +49,12 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
 
             var snapshot = new ScanSnapshot
             {
-                ScannedAtUtc = previous?.ScannedAtUtc ?? DateTime.UtcNow,
+                ScannedAtUtc = previous?.ScannedAtUtc ?? DateTime.MinValue,
                 Series = [.. series.OrderByDescending(s => s.MissingEpisodes.Count)],
             };
-            cacheStore.SaveScan(snapshot);
+            // A patch without a prior full scan would persist a one-series list that the scheduler reads as a completed scan.
+            if (previous is not null)
+                cacheStore.SaveScan(snapshot);
             return snapshot;
         }
         finally
@@ -70,7 +71,7 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         var pending = cacheStore.GetPendingSearches();
         var pendingByKey = pending.ToLookup(p => (p.ShokoSeriesId, p.AnidbEpisodeId));
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var statusSession = await statusResolver.BeginAsync(settings, ct).ConfigureAwait(false);
+        var statusSession = await statusResolver.BeginAsync(settings, ct, bulk: true).ConfigureAwait(false);
 
         // Tracks every actually-missing episode regardless of HideUnaired, so reconciliation doesn't mistake "hidden because unaired" for "no longer missing".
         var stillMissingKeys = new HashSet<(int ShokoSeriesId, int AnidbEpisodeId)>();
