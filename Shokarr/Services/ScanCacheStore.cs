@@ -94,11 +94,21 @@ public class ScanCacheStore : IDisposable
     private void UpsertSeriesOverride(int shokoSeriesId, Action<SeriesOverride> mutate)
     {
         var col = _db.GetCollection<SeriesOverride>(SeriesOverridesCollectionName);
-        var existing = col.Find(o => o.ShokoSeriesId == shokoSeriesId).FirstOrDefault() ?? new SeriesOverride { ShokoSeriesId = shokoSeriesId };
-        mutate(existing);
-        col.DeleteMany(o => o.ShokoSeriesId == shokoSeriesId);
-        if (existing.IncludeSpecials is not null || existing.QualityProfileId is not null || !string.IsNullOrEmpty(existing.RootFolderPath))
-            col.Insert(existing);
+        _db.BeginTrans();
+        try
+        {
+            var existing = col.Find(o => o.ShokoSeriesId == shokoSeriesId).FirstOrDefault() ?? new SeriesOverride { ShokoSeriesId = shokoSeriesId };
+            mutate(existing);
+            col.DeleteMany(o => o.ShokoSeriesId == shokoSeriesId);
+            if (existing.IncludeSpecials is not null || existing.QualityProfileId is not null || !string.IsNullOrEmpty(existing.RootFolderPath))
+                col.Insert(existing);
+            _db.Commit();
+        }
+        catch
+        {
+            _db.Rollback();
+            throw;
+        }
     }
 
     /// <summary>Gets the most recent scan snapshot, or null if no scan has run yet.</summary>
@@ -176,8 +186,12 @@ public class ScanCacheStore : IDisposable
     /// <summary>Appends one or more search-history entries, trimming the oldest down to <see cref="MaxHistoryEntries"/> once after the whole batch is inserted, not once per entry.</summary>
     public void AddHistoryEntries(IEnumerable<SearchHistoryEntry> entries)
     {
+        var batch = entries.ToList();
+        if (batch.Count == 0)
+            return;
+
         var col = _db.GetCollection<SearchHistoryEntry>(SearchHistoryCollectionName);
-        col.InsertBulk(entries);
+        col.InsertBulk(batch);
 
         // Ids auto-increment and only the oldest are ever deleted, so the ids are contiguous and a cutoff on id keeps exactly the newest MaxHistoryEntries.
         var cutoffId = col.Max().AsInt32 - MaxHistoryEntries;

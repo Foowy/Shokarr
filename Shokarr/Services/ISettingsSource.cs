@@ -18,7 +18,9 @@ public interface ISettingsSource
 public class NativeSettingsSource(IConfigurationService configurationService, ScanCacheStore legacyStore) : ISettingsSource
 {
     private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
+    private const int MaxMigrationAttempts = 3;
     private readonly RetryOnceGate _migration = new();
+    private int _migrationFailures;
 
     public SonarrSettings GetSonarr() => Load().ToSonarrSettings();
 
@@ -44,18 +46,23 @@ public class NativeSettingsSource(IConfigurationService configurationService, Sc
 
     private void EnsureMigrated()
     {
-        _migration.Run(() =>
+        if (Volatile.Read(ref _migrationFailures) >= MaxMigrationAttempts)
+            return;
+
+        try
         {
-            try
+            _migration.Run(() =>
             {
                 var config = configurationService.Load<ShokarrConfiguration>(copy: true);
                 if (LegacySettingsMigrator.TryMigrate(legacyStore.GetLegacySettings(), legacyStore.GetLegacyRadarrSettings(), config))
                     configurationService.Save(config);
-            }
-            catch (Exception ex)
-            {
-                s_logger.Warn(ex, "Shokarr: could not migrate legacy settings, continuing with native configuration as-is: {Error}", ex.Message.ForLog());
-            }
-        });
+            });
+        }
+        catch (Exception ex)
+        {
+            // The gate stays open on failure so a transient error is retried, up to a cap so a persistent one doesn't log on every settings read.
+            Interlocked.Increment(ref _migrationFailures);
+            s_logger.Warn(ex, "Shokarr: could not migrate legacy settings, continuing with native configuration as-is: {Error}", ex.Message.ForLog());
+        }
     }
 }

@@ -46,8 +46,8 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
         run: |
-          TAG="${{ github.event.inputs.tag_name || github.event.release.tag_name }}"
 
           # Check if the input/release reference looks like a standard tag (e.g. starts with v)
           if [[ "$TAG" =~ ^v[0-9] ]]; then
@@ -144,8 +144,8 @@ jobs:
       - name: Update Manifest
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          TAG: ${{ github.event.inputs.tag_name || github.event.release.tag_name }}
         run: |
-          TAG="${{ github.event.inputs.tag_name || github.event.release.tag_name }}"
           if [[ ! "$TAG" =~ ^v[0-9] ]]; then
             echo "Not a valid release tag ($TAG), skipping manifest update."
             exit 0

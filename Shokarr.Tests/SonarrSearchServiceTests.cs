@@ -10,11 +10,14 @@ namespace Shokarr.Tests;
 public class SonarrSearchServiceTests : IDisposable
 {
     private readonly List<ScanCacheStore> _stores = [];
+    private readonly List<string> _dirs = [];
 
     public void Dispose()
     {
         foreach (var store in _stores)
             store.Dispose();
+        foreach (var dir in _dirs)
+            Directory.Delete(dir, recursive: true);
     }
 
     private static SonarrSettings TestSettings => new() { BaseUrl = "http://sonarr.local:8989", ApiKey = "testkey" };
@@ -30,7 +33,9 @@ public class SonarrSearchServiceTests : IDisposable
 
     private SonarrSearchService MakeService(SonarrClient client)
     {
-        var cacheStore = new ScanCacheStore(Path.Combine(Path.GetTempPath(), "shokarr-tests-" + Guid.NewGuid()));
+        var dir = Path.Combine(Path.GetTempPath(), "shokarr-tests-" + Guid.NewGuid());
+        _dirs.Add(dir);
+        var cacheStore = new ScanCacheStore(dir);
         _stores.Add(cacheStore);
         var notificationService = new NotificationService(new HttpClient(new FakeHandler(_ => new HttpResponseMessage(HttpStatusCode.OK))));
         return new SonarrSearchService(client, cacheStore, notificationService);
