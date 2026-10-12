@@ -392,7 +392,8 @@ function currentSettingsForm() {
     includeSpecials: document.getElementById('settings-include-specials').checked,
     hideUnaired: document.getElementById('settings-hide-unaired').checked,
     countSonarrHeldAsMissing: document.getElementById('settings-count-sonarr-held').checked,
-    notificationWebhookUrl: document.getElementById('settings-webhook').value,
+    // Omitted (null) until the stored settings have loaded, so an early save can't clear the saved webhook.
+    notificationWebhookUrl: settingsLoaded ? document.getElementById('settings-webhook').value : null,
   };
 }
 
@@ -438,8 +439,20 @@ async function showSavedArrSelection(key, data) {
   }
 }
 
+let settingsLoaded = false;
+
+// Save stays disabled until the stored settings are on screen, since an early save would send the empty form over them.
+function setSettingsLoaded(loaded) {
+  settingsLoaded = loaded;
+  document.getElementById('save-settings').disabled = !loaded;
+}
+
 async function loadSettings() {
   const result = await fetchJson('/Settings');
+  if (!result?.Data) {
+    setStatus(`Couldn't load settings: ${result?.Message || 'no response from Shoko'}`, false);
+    return;
+  }
   document.getElementById('settings-url').value = result.Data.BaseUrl || '';
   // Never populate the actual key into .value: the field must stay blank so save-with-no-key
   // (currentSettingsForm's apiKey: '') keeps hitting the backend's "preserve existing key" path.
@@ -447,6 +460,7 @@ async function loadSettings() {
   document.getElementById('settings-key').placeholder = result.Data.ApiKey ? 'Key saved (leave blank to keep)' : '';
   // The mask round-trips as "keep the stored webhook"; clearing the field removes it.
   document.getElementById('settings-webhook').value = result.Data.NotificationWebhookUrl || '';
+  setSettingsLoaded(true);
   document.getElementById('settings-interval').value = result.Data.ScanIntervalHours;
   document.getElementById('settings-include-specials').checked = result.Data.IncludeSpecials;
   document.getElementById('settings-hide-unaired').checked = result.Data.HideUnaired;
@@ -738,27 +752,40 @@ document.getElementById('save-settings').onclick = async () => {
     qualityProfileId: Number(document.getElementById('settings-quality-profile').value) || null,
     rootFolderPath: document.getElementById('settings-root-folder').value || null,
   };
-  const sonarrSaved = await fetchJson('/Settings', { method: 'PUT', body: JSON.stringify(settings) });
-  if (!sonarrSaved?.Success) {
-    setStatus(`Not saved: ${sonarrSaved?.Message || 'Sonarr settings were rejected.'}`, false);
-    return;
-  }
-
   const radarrSettings = {
     baseUrl: document.getElementById('radarr-settings-url').value,
     apiKey: document.getElementById('radarr-settings-key').value,
     qualityProfileId: Number(document.getElementById('radarr-settings-quality-profile').value) || null,
     rootFolderPath: document.getElementById('radarr-settings-root-folder').value || null,
   };
-  const radarrSaved = await fetchJson('/RadarrSettings', { method: 'PUT', body: JSON.stringify(radarrSettings) });
-  if (!radarrSaved?.Success) {
-    setStatus(`Sonarr saved, Radarr not saved: ${radarrSaved?.Message || 'Radarr settings were rejected.'}`, false);
+
+  // Both saves are always attempted (a network error counts as a rejection), so one bad form doesn't block the other.
+  const save = async (path, body) => {
+    try {
+      return await fetchJson(path, { method: 'PUT', body: JSON.stringify(body) });
+    } catch (e) {
+      return { Success: false, Message: e.message };
+    }
+  };
+  const sonarrSaved = await save('/Settings', settings);
+  const radarrSaved = await save('/RadarrSettings', radarrSettings);
+  const sonarrOk = !!sonarrSaved?.Success;
+  const radarrOk = !!radarrSaved?.Success;
+
+  if (sonarrOk) document.getElementById('settings-key').value = '';
+  if (radarrOk) document.getElementById('radarr-settings-key').value = '';
+
+  if (!sonarrOk || !radarrOk) {
+    const parts = [
+      sonarrOk ? 'Sonarr saved' : `Sonarr not saved: ${sonarrSaved?.Message || 'settings were rejected'}`,
+      radarrOk ? 'Radarr saved' : `Radarr not saved: ${radarrSaved?.Message || 'settings were rejected'}`,
+    ];
+    setStatus(parts.join('; '), false);
     return;
   }
-  document.getElementById('radarr-settings-key').value = '';
 
   setStatus('Saved.', true);
-  document.getElementById('settings-key').value = '';
+  setSettingsLoaded(false);
   document.getElementById('settings-webhook').value = '';
   await loadSettings();
 };
@@ -776,5 +803,6 @@ for (const [oldKey, newKey] of [
 initTheme();
 document.getElementById('live-refresh').checked = localStorage.getItem(LIVE_REFRESH_STORAGE_KEY) === '1';
 setLiveRefresh(document.getElementById('live-refresh').checked);
+setSettingsLoaded(false);
 loadSettings();
 loadScanResults();

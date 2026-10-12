@@ -32,10 +32,8 @@ public class ScanCacheStore : IDisposable
         MigrateLegacyDataFolder(dataPath, pluginDir, "shoko_arr");
         MigrateLegacyDataFolder(dataPath, pluginDir, "shoko_sonarr");
         Directory.CreateDirectory(pluginDir);
-        // LiteDB hands DateTimes back as Kind=Local; comparisons against DateTime.UtcNow ignore Kind, so every stored *Utc value would be off by the host's UTC offset.
-        var mapper = new BsonMapper();
-        mapper.RegisterType(value => new BsonValue(value), bson => bson.AsDateTime.ToUniversalTime());
-        _db = new LiteDatabase(Path.Combine(pluginDir, ShokarrConstants.LiteDbFileName), mapper);
+        // A private mapper keeps this store off LiteDB's process-wide BsonMapper.Global, which other plugins in the host could customize.
+        _db = new LiteDatabase(Path.Combine(pluginDir, ShokarrConstants.LiteDbFileName), new BsonMapper());
     }
 
     // Builds before 1.0 used the ShokoSonarr names, 1.0 the ShokoArr names; each kept its folder and database under
@@ -107,7 +105,11 @@ public class ScanCacheStore : IDisposable
     public ScanSnapshot? GetLastScan()
     {
         var col = _db.GetCollection<ScanDocument>(ScanCollectionName);
-        return col.FindById(ScanDocumentId)?.Snapshot;
+        var snapshot = col.FindById(ScanDocumentId)?.Snapshot;
+        // LiteDB returns DateTimes as Kind=Local, and comparisons against DateTime.UtcNow ignore Kind, so every *Utc value read back is converted here.
+        if (snapshot is not null)
+            snapshot.ScannedAtUtc = snapshot.ScannedAtUtc.ToUniversalTime();
+        return snapshot;
     }
 
     /// <summary>Persists a scan snapshot, replacing any previous snapshot wholesale.</summary>
@@ -137,7 +139,10 @@ public class ScanCacheStore : IDisposable
     public List<PendingSearch> GetPendingSearches()
     {
         var col = _db.GetCollection<PendingSearch>(PendingSearchesCollectionName);
-        return col.FindAll().ToList();
+        var entries = col.FindAll().ToList();
+        foreach (var entry in entries)
+            entry.TriggeredAtUtc = entry.TriggeredAtUtc.ToUniversalTime();
+        return entries;
     }
 
     /// <summary>Bumps the failed-reconciliation count and stores the latest error on an existing pending entry.</summary>
@@ -173,7 +178,10 @@ public class ScanCacheStore : IDisposable
     public List<SearchHistoryEntry> GetHistory(int limit = 200)
     {
         var col = _db.GetCollection<SearchHistoryEntry>(SearchHistoryCollectionName);
-        return col.FindAll().OrderByDescending(e => e.TimestampUtc).Take(limit).ToList();
+        var entries = col.FindAll().ToList();
+        foreach (var entry in entries)
+            entry.TimestampUtc = entry.TimestampUtc.ToUniversalTime();
+        return [.. entries.OrderByDescending(e => e.TimestampUtc).Take(limit)];
     }
 
     private class SettingsDocument

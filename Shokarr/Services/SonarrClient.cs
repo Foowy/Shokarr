@@ -177,3 +177,19 @@ public class SonarrClient(HttpClient httpClient) : ArrClientBase(httpClient)
         return SendAsync(request, ct);
     }
 }
+
+/// <summary>Helpers for working with lists of <see cref="SonarrSeriesResource"/>.</summary>
+public static class SonarrSeriesResourceExtensions
+{
+    /// <summary>Indexes series by TVDB ID so per-series lookups are O(1) instead of a scan of the whole list.</summary>
+    /// <param name="series">The series to index.</param>
+    /// <returns>A TVDB ID to series map; series without a TVDB ID are skipped and the first wins on duplicates.</returns>
+    public static Dictionary<int, SonarrSeriesResource> ToTvdbLookup(this IEnumerable<SonarrSeriesResource> series)
+    {
+        var lookup = new Dictionary<int, SonarrSeriesResource>();
+        foreach (var s in series)
+            if (s.TvdbId is { } tvdbId)
+                lookup.TryAdd(tvdbId, s);
+        return lookup;
+    }
+}

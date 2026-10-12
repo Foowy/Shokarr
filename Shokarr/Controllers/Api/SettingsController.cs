@@ -33,7 +33,7 @@ public class SettingsController(ISettingsSource settingsSource, SonarrClient son
     /// <summary>Saves new Sonarr settings. If the incoming API key, quality profile, or root folder is blank/unset
     /// (e.g. the dashboard re-saved without re-testing the connection, which is the only way those dropdowns get
     /// populated), the previously-stored value is kept instead of being wiped. The stored API key is only kept when
-    /// the URL is unchanged. The webhook is kept only when the incoming value is the secret mask; a blank webhook clears it.</summary>
+    /// the URL is unchanged. The webhook is kept when the incoming value is omitted or the secret mask; a blank webhook clears it.</summary>
     /// <param name="settings">The settings to save.</param>
     /// <returns>200 on success.</returns>
     [HttpPut]
@@ -41,7 +41,7 @@ public class SettingsController(ISettingsSource settingsSource, SonarrClient son
     {
         var stored = settingsSource.GetSonarr();
         var (apiKey, error) = ArrUrlRules.ResolveApiKey(settings, stored);
-        var keepWebhook = settings.NotificationWebhookUrl == ShokarrConstants.SecretMask;
+        var keepWebhook = settings.NotificationWebhookUrl is null || settings.NotificationWebhookUrl == ShokarrConstants.SecretMask;
         if (error is null && !keepWebhook && !string.IsNullOrEmpty(settings.NotificationWebhookUrl) && !ArrUrlRules.IsHttpUrl(settings.NotificationWebhookUrl))
             error = "Webhook " + ArrUrlRules.InvalidUrlMessage;
         if (error is not null)

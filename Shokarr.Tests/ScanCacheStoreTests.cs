@@ -351,4 +351,34 @@ public class ScanCacheStoreTests : IDisposable
         Assert.Equal(DateTimeKind.Utc, read.Kind);
         Assert.True((read - scannedAt).Duration() < TimeSpan.FromSeconds(1));
     }
+
+    [Fact]
+    public void PendingSearchesAndHistory_ReadTimestampsBackAsUtc()
+    {
+        var at = DateTime.UtcNow;
+        var pending = new PendingSearch { ShokoSeriesId = 1, AnidbEpisodeId = 2, SonarrEpisodeId = 3, TriggeredAtUtc = at };
+        _store.AddPendingSearch(pending);
+        _store.AddHistoryEntry(SearchHistoryEntry.From(pending, SearchHistoryOutcome.Imported, at));
+
+        var pendingRead = Assert.Single(_store.GetPendingSearches()).TriggeredAtUtc;
+        var historyRead = Assert.Single(_store.GetHistory()).TimestampUtc;
+
+        Assert.Equal(DateTimeKind.Utc, pendingRead.Kind);
+        Assert.Equal(DateTimeKind.Utc, historyRead.Kind);
+        Assert.True((pendingRead - at).Duration() < TimeSpan.FromSeconds(1));
+        Assert.True((historyRead - at).Duration() < TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public void PersistedModels_OnlyHaveTheDateTimeFieldsTheStoreConvertsToUtc()
+    {
+        var dateTimeProperties = typeof(ScanSnapshot).Assembly.GetTypes()
+            .Where(t => t.Namespace == typeof(ScanSnapshot).Namespace)
+            .SelectMany(t => t.GetProperties().Where(p => p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?)))
+            .Select(p => $"{p.DeclaringType!.Name}.{p.Name}")
+            .Order();
+
+        // A new DateTime property must also be converted with ToUniversalTime where ScanCacheStore reads it back.
+        Assert.Equal(["PendingSearch.TriggeredAtUtc", "ScanSnapshot.ScannedAtUtc", "SearchHistoryEntry.TimestampUtc"], dateTimeProperties);
+    }
 }

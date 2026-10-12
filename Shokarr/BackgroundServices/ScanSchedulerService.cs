@@ -10,6 +10,16 @@ public class ScanSchedulerService(ISystemService systemService, MissingEpisodeSc
 {
     private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
 
+    /// <summary>Longest the loop sleeps before re-reading the interval setting, so a changed interval takes effect within this window.</summary>
+    private static readonly TimeSpan s_maxSleep = TimeSpan.FromHours(1);
+
+    /// <summary>Sleep until due, capped at an hour so a changed interval setting is noticed promptly.</summary>
+    public static TimeSpan NextDelay(DateTime dueAt, DateTime nowUtc)
+    {
+        var delay = dueAt - nowUtc;
+        return delay <= TimeSpan.Zero ? TimeSpan.FromMinutes(1) : delay > s_maxSleep ? s_maxSleep : delay;
+    }
+
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -41,8 +51,7 @@ public class ScanSchedulerService(ISystemService systemService, MissingEpisodeSc
                     dueAt = DateTime.UtcNow.AddHours(intervalHours);
                 }
 
-                var delay = dueAt - DateTime.UtcNow;
-                await Task.Delay(delay > TimeSpan.Zero ? delay : TimeSpan.FromMinutes(1), stoppingToken).ConfigureAwait(false);
+                await Task.Delay(NextDelay(dueAt, DateTime.UtcNow), stoppingToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

@@ -171,4 +171,15 @@ public class SettingsControllerTests
 
         Assert.True(string.IsNullOrEmpty(source.Sonarr.NotificationWebhookUrl));
     }
+
+    [Fact]
+    public void SaveSettings_OmittedWebhook_KeepsIt()
+    {
+        var source = Stored();
+        var controller = new SettingsController(source, null!);
+
+        controller.SaveSettings(new SonarrSettings { BaseUrl = "http://sonarr/", NotificationWebhookUrl = null });
+
+        Assert.Equal("http://hook", source.Sonarr.NotificationWebhookUrl);
+    }
 }
