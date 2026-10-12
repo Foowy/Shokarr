@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.1",
+      "tag": "v1.3.1",
+      "source_revision": "2e0b220c7ac6bb622f7523531d1e1e24ee839dcd",
+      "released_at": "2026-10-12T11:09:44Z",
+      "channel": "Stable",
+      "release_notes": "This release finishes the code review fixes. A failed search no longer leaves episodes monitored in Sonarr, a pending search is only resolved on real evidence, and Sync Tags now covers your whole library.\n\n**Changes:**\n- Undo the episode monitoring when triggering the search fails, and track the episodes as pending if the undo also fails\n- Skip episodes that already have a search running, and mark them as searching in the results view\n- Wait for a newly added series to get its episodes in Sonarr before mapping them\n- Resolve a pending search only on positive evidence from Shoko, expire it by failure count, and stop after repeated Sonarr failures\n- Remember the TVDB match you confirm from a title search so the series resolves automatically from the next scan\n- Make Sync Tags tag every owned series, not only the ones in the last scan\n- Report a bad Sonarr or Radarr URL as an error with the server's detail, and no longer treat an HTML page as a healthy connection\n- Match special titles that use non-ASCII characters and parse air dates independent of the host's culture\n- Fix Select all in the dashboard selecting series hidden by a filter\n- Retry a failed legacy settings migration up to three times instead of skipping it for good\n- Save per-series overrides atomically and accept an empty search history batch\n- Collect test coverage in CI and read the release tag from the environment in the release workflow\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.3.0...v1.3.1",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.1/Shokarr-v1.3.1_linux-arm64.zip",
+          "checksum": "a1544b20594ccee3046656fff61e46699b6b64ee65c00208752eba60599b96d3"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.1/Shokarr-v1.3.1_linux-x64.zip",
+          "checksum": "d4122a0b7aa706212131f273810d5fd05b9f1201b6c8262577fd42ae68099302"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.1/Shokarr-v1.3.1_win-x64.zip",
+          "checksum": "e13d1b2279713c8de2682e1f5f3f604c1af5832e0c55c1d0f7cfc83054864f1e"
+        }
+      ]
+    },
+    {
       "version": "1.3.0",
       "tag": "v1.3.0",
       "source_revision": "a16f779a7aeb848740e7b8a5c7f99ba53877c11a",
