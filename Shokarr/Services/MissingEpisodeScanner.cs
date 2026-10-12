@@ -15,6 +15,12 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
     /// <summary>Pending entries older than this are dropped even if Sonarr keeps rejecting the unmonitor call (e.g. the Sonarr episode was deleted out-of-band), so a permanently-failing entry doesn't retry forever.</summary>
     private static readonly TimeSpan MaxPendingAge = TimeSpan.FromDays(14);
 
+    /// <summary>An old entry is only dropped after this many failed attempts, so one transient failure on a long-pending entry doesn't abandon it with the Sonarr episode still monitored.</summary>
+    private const int MinFailuresToExpire = 3;
+
+    /// <summary>Reconciliation stops for the scan after this many Sonarr failures in a row, so an outage doesn't cost a full timeout per pending entry while the scan lock is held.</summary>
+    private const int MaxConsecutiveReconcileFailures = 3;
+
     // Single global lock: serializes full scans and the per-series patch so their read-modify-write
     // of the persisted snapshot can't interleave. The in-flight result is not cached or shared.
     private readonly SemaphoreSlim _scanLock = new(1, 1);
@@ -81,6 +87,8 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         var stillMissingKeys = new HashSet<(int ShokoSeriesId, int AnidbEpisodeId)>();
         // Every non-hidden, file-less episode/special key regardless of the specials scope, so reconciliation can tell "imported" from "dropped from scope by an override".
         var missingIgnoringScope = new HashSet<(int ShokoSeriesId, int AnidbEpisodeId)>();
+        // Series actually examined this scan. A pending entry is only reconciled when its series is in here, so a series that was skipped or is absent doesn't look "imported".
+        var evaluatedSeriesIds = new HashSet<int>();
 
         foreach (var series in metadataService.GetAllShokoSeries())
         {
@@ -89,6 +97,7 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
             if (series.LocalEpisodeCounts.Episodes + series.LocalEpisodeCounts.Specials <= 0)
                 continue;
 
+            evaluatedSeriesIds.Add(series.LocalID);
             var candidates = MissingCandidates(series);
             var inScope = ScopedTo(candidates, series, settings);
             foreach (var e in candidates)
@@ -106,7 +115,7 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         var descopedKeys = new HashSet<(int ShokoSeriesId, int AnidbEpisodeId)>(missingIgnoringScope);
         descopedKeys.ExceptWith(stillMissingKeys);
 
-        await ReconcilePendingSearchesAsync(pending, stillMissingKeys, descopedKeys, settings, ct).ConfigureAwait(false);
+        await ReconcilePendingSearchesAsync(pending, stillMissingKeys, descopedKeys, evaluatedSeriesIds, settings, ct).ConfigureAwait(false);
 
         return new ScanSnapshot
         {
@@ -194,28 +203,42 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
     /// <summary>Unmonitors in Sonarr, and stops tracking, each pending episode no longer missing in the fresh results. Failures are logged and retried next scan, never thrown.
     /// "No longer missing" covers both an actual Shoko import and a scope change (e.g. a specials-exclude override).
     /// <paramref name="stillMissingKeys"/> ignores HideUnaired: an unaired episode hidden from the dashboard is still missing.</summary>
-    private async Task ReconcilePendingSearchesAsync(List<PendingSearch> pending, HashSet<(int ShokoSeriesId, int AnidbEpisodeId)> stillMissingKeys, HashSet<(int ShokoSeriesId, int AnidbEpisodeId)> descopedKeys, Config.SonarrSettings settings, CancellationToken ct)
+    private async Task ReconcilePendingSearchesAsync(List<PendingSearch> pending, HashSet<(int ShokoSeriesId, int AnidbEpisodeId)> stillMissingKeys, HashSet<(int ShokoSeriesId, int AnidbEpisodeId)> descopedKeys, HashSet<int> evaluatedSeriesIds, Config.SonarrSettings settings, CancellationToken ct)
     {
         if (pending.Count == 0)
             return;
 
-        foreach (var entry in pending)
+        var consecutiveFailures = 0;
+        foreach (var scanned in pending)
         {
             ct.ThrowIfCancellationRequested();
-            if (stillMissingKeys.Contains((entry.ShokoSeriesId, entry.AnidbEpisodeId)))
+            if (!evaluatedSeriesIds.Contains(scanned.ShokoSeriesId) || stillMissingKeys.Contains((scanned.ShokoSeriesId, scanned.AnidbEpisodeId)))
                 continue;
+
+            // The list was read when the scan started; cancel and re-trigger don't take the scan lock, so act on the entry as it is now.
+            var entry = cacheStore.GetPendingSearch(scanned.ShokoSeriesId, scanned.AnidbEpisodeId);
+            if (entry is null || entry.TriggeredAtUtc != scanned.TriggeredAtUtc)
+                continue;
+
+            if (consecutiveFailures >= MaxConsecutiveReconcileFailures)
+            {
+                s_logger.Warn("Shokarr: Sonarr failed {Count} times in a row, leaving the remaining pending entries for the next scan.", consecutiveFailures);
+                break;
+            }
 
             try
             {
                 var result = await sonarrClient.UnmonitorEpisodesAsync(settings, [entry.SonarrEpisodeId], ct).ConfigureAwait(false);
                 if (result.Success)
                 {
+                    consecutiveFailures = 0;
                     cacheStore.RemovePendingSearch(entry.ShokoSeriesId, entry.AnidbEpisodeId);
                     var outcome = descopedKeys.Contains((entry.ShokoSeriesId, entry.AnidbEpisodeId)) ? SearchHistoryOutcome.Descoped : SearchHistoryOutcome.Imported;
                     cacheStore.AddHistoryEntry(SearchHistoryEntry.From(entry, outcome));
                 }
                 else
                 {
+                    consecutiveFailures++;
                     s_logger.Warn("Shokarr: failed to unmonitor Sonarr episode {SonarrEpisodeId} for AniDB episode {AnidbEpisodeId}: {Error}", entry.SonarrEpisodeId, entry.AnidbEpisodeId, result.ErrorMessage);
                     cacheStore.RecordPendingFailure(entry, result.ErrorMessage!);
                     await ExpireIfStaleAsync(settings, entry, ct).ConfigureAwait(false);
@@ -227,6 +250,7 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
             }
             catch (Exception ex)
             {
+                consecutiveFailures++;
                 s_logger.Warn(ex, "Shokarr: failed to unmonitor Sonarr episode {SonarrEpisodeId} for AniDB episode {AnidbEpisodeId}", entry.SonarrEpisodeId, entry.AnidbEpisodeId);
                 cacheStore.RecordPendingFailure(entry, ex.Message);
                 await ExpireIfStaleAsync(settings, entry, ct).ConfigureAwait(false);
@@ -234,10 +258,10 @@ public class MissingEpisodeScanner(IMetadataService metadataService, ScanCacheSt
         }
     }
 
-    /// <summary>Drops a pending entry that has failed reconciliation for longer than <see cref="MaxPendingAge"/>, instead of retrying it forever.</summary>
+    /// <summary>Drops a pending entry that is older than <see cref="MaxPendingAge"/> and has failed reconciliation at least <see cref="MinFailuresToExpire"/> times, instead of retrying it forever.</summary>
     private async Task ExpireIfStaleAsync(Config.SonarrSettings settings, PendingSearch entry, CancellationToken ct)
     {
-        if (DateTime.UtcNow - entry.TriggeredAtUtc < MaxPendingAge)
+        if (DateTime.UtcNow - entry.TriggeredAtUtc < MaxPendingAge || entry.FailedReconciliations < MinFailuresToExpire)
             return;
 
         s_logger.Warn("Shokarr: giving up on Sonarr episode {SonarrEpisodeId} for AniDB episode {AnidbEpisodeId} after {MaxPendingAge} of failed reconciliation attempts", entry.SonarrEpisodeId, entry.AnidbEpisodeId, MaxPendingAge);

@@ -145,6 +145,16 @@ public class ScanCacheStore : IDisposable
         return entries;
     }
 
+    /// <summary>Gets the current pending entry for an episode, or null if it was reconciled or cancelled.</summary>
+    public PendingSearch? GetPendingSearch(int shokoSeriesId, int anidbEpisodeId)
+    {
+        var col = _db.GetCollection<PendingSearch>(PendingSearchesCollectionName);
+        var entry = col.Find(p => p.ShokoSeriesId == shokoSeriesId && p.AnidbEpisodeId == anidbEpisodeId).FirstOrDefault();
+        if (entry is not null)
+            entry.TriggeredAtUtc = entry.TriggeredAtUtc.ToUniversalTime();
+        return entry;
+    }
+
     /// <summary>Bumps the failed-reconciliation count and stores the latest error on an existing pending entry.</summary>
     public void RecordPendingFailure(PendingSearch entry, string error)
     {
