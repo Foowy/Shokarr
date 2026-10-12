@@ -165,13 +165,14 @@ public class SonarrController(SeriesMatcher matcher, SonarrSearchService searchS
         if (!added.Success)
             return Conflict(new ApiResponse<object>(Success: false, Message: added.ErrorMessage, Data: null));
 
-        return await MonitorAndSearchAsync(settings, request.ShokoSeriesId, added.Data!.Id, added.Data.TitleSlug, request.AnidbEpisodeIds, series);
+        // Sonarr only queues a refresh when a series is added, so its episode list is empty for the first few seconds.
+        return await MonitorAndSearchAsync(settings, request.ShokoSeriesId, added.Data!.Id, added.Data.TitleSlug, request.AnidbEpisodeIds, series, episodeLookupAttempts: 15);
     }
 
     /// <summary>Monitors and searches for the given missing episodes on a Sonarr series, via <see cref="SonarrSearchService.MonitorAndSearchAsync"/>.</summary>
-    private async Task<IActionResult> MonitorAndSearchAsync(Config.SonarrSettings settings, int shokoSeriesId, int sonarrSeriesId, string? sonarrTitleSlug, List<int> anidbEpisodeIds, Models.SeriesMissingResult series)
+    private async Task<IActionResult> MonitorAndSearchAsync(Config.SonarrSettings settings, int shokoSeriesId, int sonarrSeriesId, string? sonarrTitleSlug, List<int> anidbEpisodeIds, Models.SeriesMissingResult series, int episodeLookupAttempts = 1)
     {
-        var result = await searchService.MonitorAndSearchAsync(settings, shokoSeriesId, sonarrSeriesId, anidbEpisodeIds, series, sonarrTitleSlug);
+        var result = await searchService.MonitorAndSearchAsync(settings, shokoSeriesId, sonarrSeriesId, anidbEpisodeIds, series, sonarrTitleSlug, episodeLookupAttempts, TimeSpan.FromSeconds(2), HttpContext.RequestAborted);
         if (!result.Success)
             return Conflict(new ApiResponse<object>(Success: false, Message: result.ErrorMessage, Data: null));
 

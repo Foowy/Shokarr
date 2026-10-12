@@ -84,7 +84,7 @@ public class SonarrSearchServiceTests : IDisposable
         });
         var service = MakeService(client);
 
-        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5001], SeriesWith((5001, 1, false, "Episode 1")), "some-anime", TestContext.Current.CancellationToken);
+        var result = await service.MonitorAndSearchAsync(TestSettings, 1, 9, [5001], SeriesWith((5001, 1, false, "Episode 1")), "some-anime", ct: TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal("some-anime", _stores[^1].GetPendingSearches().Single().SonarrTitleSlug);
