@@ -3,8 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Logging;
 using Shoko.Abstractions.Config;
 using Shoko.Abstractions.Config.Attributes;
-using Shoko.Abstractions.Config.Components;
-using Shoko.Abstractions.Config.Enums;
+using Shoko.Abstractions.UI.Attributes;
+using Shoko.Abstractions.UI.Components;
+using Shoko.Abstractions.UI.Enums;
 using Shokarr.Services;
 
 namespace Shokarr.Config;
@@ -132,11 +133,11 @@ public class ShokarrConfiguration : IConfiguration
         return new([new(value, label, isSelected: true)]);
     }
 
-    [CustomAction(Theme = DisplayColorTheme.Primary, Position = DisplayButtonPosition.Top, SectionName = "Sonarr")]
+    [CustomAction(Theme = DisplayColorTheme.Primary, Position = DisplayButtonPosition.Start, SectionName = "Sonarr")]
     public ConfigurationActionResult TestSonarr(ConfigurationActionContext<ShokarrConfiguration> context) =>
         TestArr<SonarrClient>(context, ToSonarrSettings(), SonarrQualityProfile, SonarrRootFolder);
 
-    [CustomAction(Theme = DisplayColorTheme.Primary, Position = DisplayButtonPosition.Top, SectionName = "Radarr")]
+    [CustomAction(Theme = DisplayColorTheme.Primary, Position = DisplayButtonPosition.Start, SectionName = "Radarr")]
     public ConfigurationActionResult TestRadarr(ConfigurationActionContext<ShokarrConfiguration> context) =>
         TestArr<RadarrClient>(context, ToRadarrSettings(), RadarrQualityProfile, RadarrRootFolder);
 
