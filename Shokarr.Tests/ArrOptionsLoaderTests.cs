@@ -1,4 +1,4 @@
-using Shoko.Abstractions.Config.Components;
+using Shoko.Abstractions.UI.Components;
 using Shokarr.Services;
 using Xunit;
 
