@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.3",
+      "tag": "v1.3.3",
+      "source_revision": "6daeaaca501124de56e6d318a8d4e8592a49a93c",
+      "released_at": "2026-10-15T20:15:16Z",
+      "channel": "Stable",
+      "release_notes": "This release declares Shokarr's settings as the plugin's main configuration, so they show up in Shoko's own configuration list and plugin page. It needs a Shoko server build from v6.0.0-dev.529 or later, which carries the Shoko.Abstractions alpha.107 changes and the fix for the plugin page crash.\n\n**Changes:**\n- Declare the settings as the plugin's main configuration and list them in the WebUI configuration\n- Bump Shoko.Abstractions to 6.0.0-alpha.107\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.3.2...v1.3.3",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.3/Shokarr-v1.3.3_linux-arm64.zip",
+          "checksum": "682037a02053d88808d6150ded8d4d8dc0225c40c6e54a327a999cbab7b9d43a"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.3/Shokarr-v1.3.3_linux-x64.zip",
+          "checksum": "7e6f38b6d3b45ef9637bc3282caaa3b581913cf76f5fb068882b771435db4a2d"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.3/Shokarr-v1.3.3_win-x64.zip",
+          "checksum": "dd8fba7377c084d25be99c18eefad01ced7824df7cfdd741791027b52395c063"
+        }
+      ]
+    },
+    {
       "version": "1.3.2",
       "tag": "v1.3.2",
       "source_revision": "2c41a1b2dc3c9ebd255471ccfc4d494cb3b764c4",
