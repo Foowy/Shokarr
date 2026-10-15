@@ -9,21 +9,72 @@ function escapeHtml(s) {
 const THEME_STORAGE_KEY = 'shokarr-theme';
 const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-function resolveTheme(pref) {
-  return pref === 'system' ? (systemDarkQuery.matches ? 'ember-dark' : 'paper-light') : pref;
+const SHOKO_VAR_MAP = {
+  '--bg': '--panel-background-alt',
+  '--bg-raised': '--panel-background',
+  '--bg-inset': '--panel-input',
+  '--ink': '--panel-text',
+  '--rule': '--panel-border',
+  '--amber': '--panel-text-primary',
+  '--teal': '--panel-text-important',
+  '--red': '--panel-text-danger',
+};
+
+function shokoParentBody() {
+  try {
+    return window.parent !== window ? window.parent.document.body : null;
+  } catch {
+    return null;
+  }
 }
 
+function syncShokoTheme() {
+  const body = shokoParentBody();
+  const root = document.documentElement;
+  const style = body && window.parent.getComputedStyle(body);
+  if (!style || !style.getPropertyValue('--panel-text').trim()) return false;
+  for (const [mine, theirs] of Object.entries(SHOKO_VAR_MAP))
+    root.style.setProperty(mine, style.getPropertyValue(theirs).trim());
+  root.style.setProperty('--ink-dim', 'color-mix(in srgb, var(--ink) 70%, var(--bg))');
+  root.style.setProperty('--ink-faint', 'color-mix(in srgb, var(--ink) 45%, var(--bg))');
+  root.style.setProperty('--amber-dim', 'color-mix(in srgb, var(--amber) 35%, var(--bg))');
+  root.style.colorScheme = style.colorScheme;
+  return true;
+}
+
+function clearShokoTheme() {
+  const root = document.documentElement;
+  for (const k of [...Object.keys(SHOKO_VAR_MAP), '--ink-dim', '--ink-faint', '--amber-dim'])
+    root.style.removeProperty(k);
+  root.style.removeProperty('color-scheme');
+}
+
+let shokoObserver = null;
+
 function applyTheme(pref) {
-  document.documentElement.dataset.theme = resolveTheme(pref);
+  shokoObserver?.disconnect();
+  shokoObserver = null;
+  if (pref === 'shoko') {
+    const body = shokoParentBody();
+    if (body && syncShokoTheme()) {
+      document.documentElement.dataset.theme = 'shoko';
+      shokoObserver = new MutationObserver(syncShokoTheme);
+      shokoObserver.observe(body, { attributes: true, attributeFilter: ['class'] });
+      return;
+    }
+    pref = 'system';
+  }
+  clearShokoTheme();
+  document.documentElement.dataset.theme = pref === 'system' ? (systemDarkQuery.matches ? 'ember-dark' : 'paper-light') : pref;
 }
 
 function initTheme() {
-  const pref = localStorage.getItem(THEME_STORAGE_KEY) || 'system';
+  const pref = localStorage.getItem(THEME_STORAGE_KEY) || 'shoko';
   document.getElementById('theme-select').value = pref;
   applyTheme(pref);
   systemDarkQuery.addEventListener('change', () => {
-    if ((localStorage.getItem(THEME_STORAGE_KEY) || 'system') === 'system')
-      applyTheme('system');
+    const current = localStorage.getItem(THEME_STORAGE_KEY) || 'shoko';
+    if (current === 'system' || (current === 'shoko' && !shokoObserver)) applyTheme(current);
   });
 }
 
