@@ -20,6 +20,7 @@ public class PluginTests
     {
         Assert.Contains(typeof(IPlugin<ShokarrConfiguration>), typeof(Plugin).GetInterfaces());
         Assert.True(typeof(IPluginConfiguration).IsAssignableFrom(typeof(ShokarrConfiguration)));
+        Assert.True(typeof(IVisibleConfiguration).IsAssignableFrom(typeof(ShokarrConfiguration)));
     }
 
     private static void AssertEmbeddedPng(string? name)
