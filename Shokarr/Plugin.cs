@@ -1,10 +1,11 @@
 using Shoko.Abstractions.Plugin;
 using Shoko.Abstractions.Plugin.Models;
+using Shokarr.Config;
 
 namespace Shokarr;
 
 /// <summary>Plugin entry point and descriptor for Shoko Server.</summary>
-public class Plugin : IPlugin
+public class Plugin : IPlugin<ShokarrConfiguration>
 {
     /// <inheritdoc/>
     public Guid ID => new(ShokarrConstants.PluginId);

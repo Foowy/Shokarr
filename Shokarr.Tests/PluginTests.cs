@@ -1,3 +1,6 @@
+using Shoko.Abstractions.Config;
+using Shoko.Abstractions.Plugin;
+using Shokarr.Config;
 using Xunit;
 
 namespace Shokarr.Tests;
@@ -11,6 +14,13 @@ public class PluginTests
 
     [Fact]
     public void EmbeddedThumbnailResourceName_PointsAtAnEmbeddedPng() => AssertEmbeddedPng(new Plugin().EmbeddedThumbnailResourceName);
+
+    [Fact]
+    public void Plugin_DeclaresShokarrConfigurationAsItsMainConfiguration()
+    {
+        Assert.Contains(typeof(IPlugin<ShokarrConfiguration>), typeof(Plugin).GetInterfaces());
+        Assert.True(typeof(IPluginConfiguration).IsAssignableFrom(typeof(ShokarrConfiguration)));
+    }
 
     private static void AssertEmbeddedPng(string? name)
     {

@@ -13,7 +13,7 @@ namespace Shokarr.Config;
 // Shoko names the settings file after the display name; pinned so settings saved as "Shoko Arr" still load.
 [StorageLocation(FileName = "shoko-arr")]
 [Display(Name = "Shokarr")]
-public class ShokarrConfiguration : IConfiguration
+public class ShokarrConfiguration : IPluginConfiguration
 {
     [SectionName("Sonarr")]
     [Display(Name = "Sonarr URL")]
