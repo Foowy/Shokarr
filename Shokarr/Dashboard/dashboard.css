@@ -1,64 +1,39 @@
 :root,
-:root[data-theme="ember-dark"] {
-  --bg: #15130f;
-  --bg-raised: #1c1912;
-  --bg-inset: #100e0a;
-  --ink: #f1ead9;
-  --ink-dim: #a89a80;
-  --ink-faint: #6e6350;
-  --rule: #362f22;
-  --amber: #e8a33d;
-  --amber-dim: #6b4d1e;
-  --teal: #4bab98;
-  --red: #d1583f;
+:root[data-theme="shoko-gray"] {
+  color-scheme: dark;
+  --bg: #282e38;
+  --bg-raised: #2c333e;
+  --bg-inset: #1e2027;
+  --ink: #cfd8e3;
+  --ink-dim: #9da5b0;
+  --ink-faint: #737a85;
+  --rule: #21242b;
+  --amber: #44a3ff;
+  --amber-dim: #32577d;
+  --teal: #10c469;
+  --red: #ff6c6c;
   --mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", monospace;
   --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 3px;
 }
 
-:root[data-theme="teal-dark"] {
-  --bg: #0e1614;
-  --bg-raised: #12211d;
-  --bg-inset: #0a1512;
-  --ink: #e4f3ee;
-  --ink-dim: #8bb3a7;
-  --ink-faint: #557a70;
-  --rule: #1f3a33;
-  --amber: #4bab98;
-  --amber-dim: #1f5b4e;
-  --teal: #e8a33d;
-  --red: #d1583f;
-}
-
 :root[data-theme="shoko-aniblackle"] {
+  color-scheme: dark;
   --bg: #111111;
   --bg-raised: #222222;
-  --bg-inset: #0b0e17;
+  --bg-inset: #111111;
   --ink: #cfd8e3;
-  --ink-dim: #96b396;
-  --ink-faint: #6f7d6f;
+  --ink-dim: #969ca4;
+  --ink-faint: #666a6f;
   --rule: #0b0e17;
   --amber: #de7272;
-  --amber-dim: #333333;
+  --amber-dim: #593333;
   --teal: #06c270;
   --red: #ff5252;
 }
 
-:root[data-theme="paper-light"] {
-  --bg: #f5f1e8;
-  --bg-raised: #ffffff;
-  --bg-inset: #ece6d6;
-  --ink: #241f14;
-  --ink-dim: #5c5236;
-  --ink-faint: #8c8163;
-  --rule: #d8cfb4;
-  --amber: #b3701a;
-  --amber-dim: #e6c78f;
-  --teal: #2f7d6c;
-  --red: #b5402a;
-}
-
 :root[data-theme="shoko-neonglass"] {
+  color-scheme: dark;
   --bg: #080a12;
   --bg-raised: rgba(0, 0, 0, 0.4);
   --bg-inset: rgba(0, 0, 0, 0.55);
@@ -66,8 +41,8 @@
   --ink-dim: #b9bece;
   --ink-faint: #7b8196;
   --rule: rgba(255, 255, 255, 0.15);
-  --amber: #5b7dff;
-  --amber-dim: rgba(91, 125, 255, 0.4);
+  --amber: #309bff;
+  --amber-dim: rgba(48, 155, 255, 0.4);
   --teal: #44ff95;
   --red: #e22828;
 }
