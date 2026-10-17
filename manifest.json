@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.5",
+      "tag": "v1.3.5",
+      "source_revision": "7feb83ebeed434bb96ccb57efc0c5437f94c6a33",
+      "released_at": "2026-10-17T16:23:57Z",
+      "channel": "Stable",
+      "release_notes": "This release makes the Neonglass dashboard theme match Shoko's own: the same solid blue button outline, no green accents in the background, and the same see-through glass panels over Shoko's background photo.\n\n**Changes:**\n- Use Shoko's solid blue button outline in Neonglass instead of a blue-to-green gradient\n- Drop the green background glow from Neonglass\n- Add Shoko's Neonglass background photo with 25% glass panels and a 60% header\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.3.4...v1.3.5",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.5/Shokarr-v1.3.5_linux-arm64.zip",
+          "checksum": "aa7708bfdad4b6c1a7d5c30eeb47182e057456c5efc2d1d9a540e4a122ca898d"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.5/Shokarr-v1.3.5_linux-x64.zip",
+          "checksum": "8b611d838d08a9c4f8c49fc8176df5c41074af058e8ec66b7a638056354ada4f"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.5/Shokarr-v1.3.5_win-x64.zip",
+          "checksum": "4e3418e9a3428cc3937705e4db1bd23e664972a5a06699daa148a265fb840de5"
+        }
+      ]
+    },
+    {
       "version": "1.3.4",
       "tag": "v1.3.4",
       "source_revision": "3baf130185fead582620c8e7b05611c6afe1cd57",
