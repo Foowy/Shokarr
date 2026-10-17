@@ -7,24 +7,18 @@ function escapeHtml(s) {
 }
 
 const THEME_STORAGE_KEY = 'shokarr-theme';
-const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const DEFAULT_THEME = 'shoko-gray';
 
-function resolveTheme(pref) {
-  return pref === 'system' ? (systemDarkQuery.matches ? 'ember-dark' : 'paper-light') : pref;
-}
-
-function applyTheme(pref) {
-  document.documentElement.dataset.theme = resolveTheme(pref);
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
 }
 
 function initTheme() {
-  const pref = localStorage.getItem(THEME_STORAGE_KEY) || 'system';
-  document.getElementById('theme-select').value = pref;
-  applyTheme(pref);
-  systemDarkQuery.addEventListener('change', () => {
-    if ((localStorage.getItem(THEME_STORAGE_KEY) || 'system') === 'system')
-      applyTheme('system');
-  });
+  const select = document.getElementById('theme-select');
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  const theme = [...select.options].some((o) => o.value === stored) ? stored : DEFAULT_THEME;
+  select.value = theme;
+  applyTheme(theme);
 }
 
 document.getElementById('theme-select').onchange = (e) => {
