@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.4",
+      "tag": "v1.3.4",
+      "source_revision": "3baf130185fead582620c8e7b05611c6afe1cd57",
+      "released_at": "2026-10-17T16:07:38Z",
+      "channel": "Stable",
+      "release_notes": "This release gives the dashboard Shoko's own themes and moves to the latest Shoko.Abstractions.\n\n**Changes:**\n- Use Shoko's own themes (Shoko Gray, AniBlackle, Neonglass) in the dashboard\n- Bump Shoko.Abstractions to 6.0.0-alpha.108\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.3.3...v1.3.4",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.4/Shokarr-v1.3.4_linux-arm64.zip",
+          "checksum": "1efa1ebeb6c0da940632bd62bc859270af26c4b40d22418ce8b6433daf98be06"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.4/Shokarr-v1.3.4_linux-x64.zip",
+          "checksum": "2fa09ba8accd4664fb79a2883cd201ad2c9f762b03429f969aa90ccb17bffe1f"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.4/Shokarr-v1.3.4_win-x64.zip",
+          "checksum": "3b6a67b21b6e4c832a4c7d5d7b9b40e5bf2bf0a7581787800005be7fed3a35c8"
+        }
+      ]
+    },
+    {
       "version": "1.3.3",
       "tag": "v1.3.3",
       "source_revision": "6daeaaca501124de56e6d318a8d4e8592a49a93c",
