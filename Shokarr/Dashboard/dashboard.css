@@ -50,26 +50,22 @@
 :root[data-theme="shoko-neonglass"] body {
   background:
     radial-gradient(ellipse at 15% 0%, rgba(63, 101, 251, 0.28), transparent 55%),
-    radial-gradient(ellipse at 90% 100%, rgba(68, 255, 149, 0.16), transparent 50%),
     var(--bg);
   background-attachment: fixed;
 }
 
 :root[data-theme="shoko-neonglass"] button,
 :root[data-theme="shoko-neonglass"] button.primary {
-  border: 2px solid transparent;
-  background:
-    linear-gradient(rgba(8, 10, 18, 0.85), rgba(8, 10, 18, 0.85)) padding-box,
-    linear-gradient(90deg, #3f65fb, #44ff95) border-box;
+  border: 2px solid #3f65fb;
+  background: transparent;
   color: var(--ink);
 }
 
 :root[data-theme="shoko-neonglass"] button:hover,
 :root[data-theme="shoko-neonglass"] button.primary:hover {
-  background:
-    linear-gradient(rgba(63, 101, 251, 0.35), rgba(63, 101, 251, 0.35)) padding-box,
-    linear-gradient(90deg, #3f65fb, #44ff95) border-box;
-  color: var(--ink);
+  background: rgba(63, 101, 251, 0.8);
+  box-shadow: 0 0 10px rgba(63, 101, 251, 0.8);
+  color: #fff;
 }
 
 * { box-sizing: border-box; }
