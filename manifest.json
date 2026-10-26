@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.6",
+      "tag": "v1.3.6",
+      "source_revision": "9f57f3e02df8b6b9beb44cd8b4dce1984abbbc79",
+      "released_at": "2026-10-26T10:16:59Z",
+      "channel": "Stable",
+      "release_notes": "This release moves Shokarr to the latest Shoko.Abstractions and build tools, and has the build generate the plugin's ID, name and description from the project instead of repeating them in code. Nothing changes in how Shokarr scans or searches.\n\n**Changes:**\n- Bump Shoko.Abstractions to 6.0.0-alpha.114\n- Bump Shoko.BuildTools.Targets to 0.6.1\n- Generate the plugin ID, name and description from the project and manifest.json instead of hand-written constants\n- Add a test that guards the plugin ID, name and description against accidental changes\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.3.5...v1.3.6",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.6/Shokarr-v1.3.6_linux-arm64.zip",
+          "checksum": "84e840b72aae0fc62a3c83b3f0529d64898a3a92e592094a068189df61455322"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.6/Shokarr-v1.3.6_linux-x64.zip",
+          "checksum": "07f3043b27eaa4d65baf52c261e3759b0804c8e624ef392d412f9aebb58ebdc0"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.6/Shokarr-v1.3.6_win-x64.zip",
+          "checksum": "8cf399345577553eca5d8beedcef359c28b18c4e90431038cfc45aa8e9e05d54"
+        }
+      ]
+    },
+    {
       "version": "1.3.5",
       "tag": "v1.3.5",
       "source_revision": "7feb83ebeed434bb96ccb57efc0c5437f94c6a33",
