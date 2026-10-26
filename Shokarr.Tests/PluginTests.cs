@@ -16,6 +16,15 @@ public class PluginTests
     public void EmbeddedThumbnailResourceName_PointsAtAnEmbeddedPng() => AssertEmbeddedPng(new Plugin().EmbeddedThumbnailResourceName);
 
     [Fact]
+    public void GeneratedIdentity_KeepsTheShippedPluginIdNameAndDescription()
+    {
+        var plugin = new Plugin();
+        Assert.Equal(new Guid("8f2c1a4e-6b9d-4e3a-9c7f-2d5b8a1e6f3c"), plugin.ID);
+        Assert.Equal(ShokarrConstants.Name, plugin.Name);
+        Assert.False(string.IsNullOrWhiteSpace(plugin.Description));
+    }
+
+    [Fact]
     public void Plugin_DeclaresShokarrConfigurationAsItsMainConfiguration()
     {
         Assert.Contains(typeof(IPlugin<ShokarrConfiguration>), typeof(Plugin).GetInterfaces());
