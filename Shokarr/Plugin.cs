@@ -4,18 +4,9 @@ using Shokarr.Config;
 
 namespace Shokarr;
 
-/// <summary>Plugin entry point and descriptor for Shoko Server.</summary>
-public class Plugin : IPlugin<ShokarrConfiguration>
+/// <summary>Plugin entry point and descriptor for Shoko Server. ID, name and description are generated from the project's Plugin* properties and manifest.json.</summary>
+public partial class Plugin : IPlugin<ShokarrConfiguration>
 {
-    /// <inheritdoc/>
-    public Guid ID => new(ShokarrConstants.PluginId);
-
-    /// <inheritdoc/>
-    public string Name => ShokarrConstants.Name;
-
-    /// <inheritdoc/>
-    public string? Description => ShokarrConstants.Description;
-
     /// <inheritdoc/>
     public string? EmbeddedThumbnailResourceName => "Shokarr.assets.Thumbnail.png";
 
