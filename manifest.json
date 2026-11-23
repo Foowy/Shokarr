@@ -15,6 +15,34 @@
   "icon_url": "https://raw.githubusercontent.com/Foowy/Shokarr/master/assets/icon.png",
   "releases": [
     {
+      "version": "1.3.9",
+      "tag": "v1.3.9",
+      "source_revision": "0925af157b9a02bdb03635732cbda38043e6e01b",
+      "released_at": "2026-11-23T07:20:13Z",
+      "channel": "Stable",
+      "release_notes": "This release moves Shokarr to the latest Shoko.Abstractions. Nothing changes in how Shokarr scans or searches.\n\n**Changes:**\n- Bump Shoko.Abstractions to 6.0.0-alpha.141\n\n**Full Changelog**: https://github.com/Foowy/Shokarr/compare/v1.3.8...v1.3.9",
+      "archives": [
+        {
+          "runtime": "linux-arm64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.9/Shokarr-v1.3.9_linux-arm64.zip",
+          "checksum": "89763393f041eb35ab6f84661cf6a9d700180f163249c1b532333b4e7a9b5887"
+        },
+        {
+          "runtime": "linux-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.9/Shokarr-v1.3.9_linux-x64.zip",
+          "checksum": "cbacfc8e1fdd81448cfcb1f4bf29cf89d2c9cf9cb28568fe07423c2184703fa1"
+        },
+        {
+          "runtime": "win-x64",
+          "abstraction": "6.0.0",
+          "url": "https://github.com/Foowy/Shokarr/releases/download/v1.3.9/Shokarr-v1.3.9_win-x64.zip",
+          "checksum": "7f51ce543f6bfdb452a9557160fe69fc76f0c7ff16f4771b860f3c30e339252c"
+        }
+      ]
+    },
+    {
       "version": "1.3.8",
       "tag": "v1.3.8",
       "source_revision": "67cb492175d878b04f9391cba3033c6f9afe3121",
